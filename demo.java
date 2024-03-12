@@ -1,5 +1,3 @@
-// Java program to create a blank text 
-// field of definite number of columns.
 import java.awt.event.*;
 import javax.swing.*;
 class text extends JFrame implements ActionListener {
