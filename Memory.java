@@ -1,27 +1,22 @@
 import java.util.Scanner;
 
-public class Memory {
-    enum TYPE {L1, L2, DRAM};
-    private TYPE type;
+public abstract class Memory {
     private int size;
     private int cycles;
     private Memory next;
-    private int[][] mem;
     private int clock;
     private int currAddr;
     private String rw;
 
 
-    public Memory(TYPE t, int s, int c, Memory n) {
-        type = t;
+    public Memory(int s, int c, Memory n) {
         size = s;
         cycles = c;
         clock = cycles;
         next = n;
-        mem = new int[4][size];
     }
 
-    public int access(String t, int addr) {
+    public int access(String t, int addr, int data) {
         int v;
         if (clock == cycles) {
             currAddr = addr;
@@ -36,7 +31,7 @@ public class Memory {
             clock = cycles;
             
             if (t == "r") 
-                v = read(addr);
+                v = read(addr.getIndex());
             else {
                 write(addr);
                 v = 0;
@@ -50,25 +45,11 @@ public class Memory {
         }
     }
 
-    private int read(int addr) {
-        int v;
-        if (addr == 0 && type != TYPE.DRAM) { // if value isn't in current level of memory
-            v = next.read(addr);
-        }
-        else {
-            v = mem[0][0]; // get the value if it's there
-        }
-        return v;
-    }
+    private abstract int read(int addr) {}
 
-    private void write(int addr) {
-        if (addr == 0 && type != TYPE.DRAM) { // if value isn't in current level of memory
-            next.write(addr);
-        }
-        else {
-            mem[0][0] = 0; // addr will be contain the value to write as well
-        }
-    }
+    private abstract void write(int addr, Data data) {}
+
+
 	public static void main(String[] args)
 	{
         Memory DRAM = new Memory(TYPE.DRAM, 1600, 3, null);

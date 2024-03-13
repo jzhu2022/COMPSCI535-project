@@ -1,12 +1,17 @@
-public class CacheAddr extends Addr {
+public class CacheLine extends Line {
     private boolean dirty;
     private boolean valid;
     private int tag;
+    private int priority;
 
-    public CacheAddr(int i, int d) {
-        super(i, d);
+
+    public CacheLine(int l, int t) {
+        super(l);
         dirty = false;
         valid = false;
+        tag = t;
+        priority = 100;
+
     }
 
     public boolean isDirty() {
@@ -20,5 +25,7 @@ public class CacheAddr extends Addr {
     public int getTag() {
         return tag;
     }
+
+    public void incrementP() {priority++;}
 
 }
