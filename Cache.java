@@ -26,7 +26,7 @@ public class Cache extends Memory {
 
     private CacheLine access(int addr) {
         int tag = addr / (numSets + lineSize);
-        int index = (addr/lineSize)%(2^numSets); 
+        int index = (addr / lineSize) % (2^numSets); 
 
         if (sets[index].find(tag) == -1) {
             Line line = next.access(addr);
@@ -41,6 +41,4 @@ public class Cache extends Memory {
             return set[index].getLine(tag);
         }
     }
-
-
 }

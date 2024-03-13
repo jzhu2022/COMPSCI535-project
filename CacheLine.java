@@ -5,11 +5,11 @@ public class CacheLine extends Line {
     private int priority;
 
 
-    public CacheLine(int l, int t) {
+    public CacheLine(int l, int tag) {
         super(l);
         dirty = false;
         valid = false;
-        tag = t;
+        this.tag = tag;
         priority = 100;
 
     }
@@ -26,6 +26,7 @@ public class CacheLine extends Line {
         return tag;
     }
 
-    public void incrementP() {priority++;}
-
+    public void incrementP() {
+        priority++;
+    }
 }
