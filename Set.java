@@ -5,6 +5,7 @@ public class Set {
     private int index;
     private int lineSize;
     private CacheLine[] lines;
+    private int max;
 
     public Set(int w, POLICY p, int l) {
         ways = w;
@@ -18,23 +19,15 @@ public class Set {
     } 
 
     public CacheLine read(int tag) {
-        for (int i = 0; i < ways; i++) {
-            if (lines[i].isValid() && lines[i].getTag() == tag) {
-                return lines[i];
-            }
-        }
+        int loc = find(tag);
+
 
         return null;
     }
 
-    public int write(int tag, CacheLine data) {
-        int way = getEmpty();
-        if (way == -1) {
-            evict(tag, data);
-        }
-        else {
-            lines[way] = data;
-        }
+    public int write(int tag, int word, int data) {
+        
+
     }
 
     public CacheLine getLine(int tag) {
@@ -88,6 +81,17 @@ public class Set {
                 lines[i].incrementP();
             }
         }
+    }
+
+    public CacheLine evict() {
+        CacheLine c = lines[max];
+        updatePriorities(lines[max].getPriority());
+        lines[max] = null;
+        return c;
+    }
+
+    public boolean needsEviction() {
+        return lines[findNext()].isValid();
     }
 
 }
