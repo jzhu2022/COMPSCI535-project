@@ -1,22 +1,32 @@
+//test
 import java.util.Scanner;
 
-public abstract class Memory {
+public class Memory {
+    enum TYPE {L1, L2, DRAM};
+    private TYPE type;
     private int size;
     private int cycles;
     private Memory next;
+    private int[][] mem;
     private int clock;
     private int currAddr;
     private String rw;
 
 
-    public Memory(int s, int c, Memory n) {
+    public Memory(TYPE t, int s, int c, Memory n) {
+        type = t;
         size = s;
         cycles = c;
         clock = cycles;
         next = n;
+        // tag | word | dirty | valid
+        mem = new int[size][4];
+        for (int i = 0; i < size; i++) {
+            memo[i][3] = 0;
+        }
     }
 
-    public int access(String t, int addr, int data) {
+    public int access(String t, int addr) {
         int v;
         if (clock == cycles) {
             currAddr = addr;
@@ -31,7 +41,7 @@ public abstract class Memory {
             clock = cycles;
             
             if (t == "r") 
-                v = read(addr.getIndex());
+                v = read(addr);
             else {
                 write(addr);
                 v = 0;
@@ -45,16 +55,30 @@ public abstract class Memory {
         }
     }
 
-    private abstract int read(int addr) {}
+    private int read(int addr) {
+        int v;
+        if (addr == 0 && type != TYPE.DRAM) { // if value isn't in current level of memory
+            v = next.read(addr);
+        }
+        else {
+            v = mem[0][0]; // get the value if it's there
+        }
+        return v;
+    }
 
-    private abstract void write(int addr, Data data) {}
-
-
+    private void write(int addr, int value) {
+        if (addr == 0 && type != TYPE.DRAM) { // if value isn't in current level of memory
+            next.write(addr);
+        }
+        else {
+            mem[addr][0] = 0; // addr will contain the value to write as well
+        }
+    }
 	public static void main(String[] args)
 	{
         Memory DRAM = new Memory(TYPE.DRAM, 1600, 3, null);
         Memory L2 = new Memory(TYPE.L2, 1600, 3, DRAM);
-        Memory L1 = new Memory(TYPE.L1, 1600, 0, L2);
+        Memory L1 = new Memory(TYPE.L1, 32768, 0, L2);
 
         Scanner scanner = new Scanner(System.in);
         System.out.println("enter a command");
@@ -66,11 +90,11 @@ public abstract class Memory {
                 int value = Integer.parseInt(command[1]);
                 int address = Integer.parseInt(command[2]);
                 int stage = Integer.parseInt(command[3]);
-                L1.write(address);
+                L1.access('w', address);
             } else if (command[0].charAt(0) == 'R') {
                 int address = Integer.parseInt(command[1]);
                 int stage = Integer.parseInt(command[2]);
-                L1.read(address);
+                L1.access('r', address);
             } else if (command[0].charAt(0) == 'V') {
                 int level = Integer.parseInt(command[1]);
                 int line = Integer.parseInt(command[2]);

@@ -1,6 +1,6 @@
 public class Set {
     private int ways;
-    enum POLICY = {LRU, FIFO};
+    enum POLICY {LRU, FIFO};
     POLICY policy;
     private int index;
     private int lineSize;
@@ -19,7 +19,7 @@ public class Set {
 
     public CacheLine read(int tag) {
         for (int i = 0; i < ways; i++) {
-            if (lines.isValid() && lines[i].getTag() == tag) {
+            if (lines[i].isValid() && lines[i].getTag() == tag) {
                 return lines[i];
             }
         }
@@ -27,13 +27,13 @@ public class Set {
         return null;
     }
 
-    public int write(int tag, int word, int data) {
+    public int write(int tag, CacheLine data) {
         int way = getEmpty();
         if (way == -1) {
             evict(tag, data);
         }
         else {
-            lines[way] = new 
+            lines[way] = data;
         }
     }
 
@@ -46,8 +46,8 @@ public class Set {
         int l = -1;
         for (int i = 0; i < ways; i++) {
             if (!lines[i].isValid()) return i;
-            if (lines[i].priority > max) {
-                max = lines[i].priority;
+            if (lines[i].getPriority() > max) {
+                max = lines[i].getPriority();
                 l = i;
             }
         }
@@ -56,7 +56,7 @@ public class Set {
 
     private int find(int tag) {
         for (int i = 0; i < lineSize; i++) {
-            if (lines.isValid() && lines[i].getTag() == tag) {
+            if (lines[i].isValid() && lines[i].getTag() == tag) {
                 return i;
             }
         }
@@ -75,7 +75,7 @@ public class Set {
     public int evict() {
         int loc = leaving();
         updatePriorities(sets[loc].priority);
-        if (lines[loc].dirty) {
+        if (lines[loc].isDirty()) {
 
         }
 
@@ -84,7 +84,9 @@ public class Set {
 
     private void updatePriorities(int p) {
         for (int i = 0; i < ways; i++) {
-            if (lines[i].priority < p) lines[i].incrementP();
+            if (lines[i].getPriority() < p) {
+                lines[i].incrementP();
+            }
         }
     }
 

@@ -14,13 +14,13 @@ public class Line {
         return data[w];
     }
 
-    public void setWord(int data, int wprd) {
-        data[w] = d;
+    public void setWord(int data, int word) {
+        data[word] = data;
     }
 
     public int[] getData() {return data;}
     public void setData(int[] d) {data = d;}
     public int getPriority() {return priority;}
-    public int getLineSize() {return lineSize};
+    public int getLineSize() {return lineSize;}
 
 }
