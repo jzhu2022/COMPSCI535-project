@@ -13,15 +13,15 @@ public class Cache extends Memory {
         }
     }
 
-    public int read(int addr) {
-        return access("r", addr);
+    public CacheLine read(int addr) {
+        return access(addr).getData();
+    }
     }
 
-    public int write(int addr, int data) {
-        int tag = addr / (numSets + lineSize);
-        int index = (addr/lineSize)%(2^numSets); 
-
-        sets[index].write(tag, data);
+    public void writeLine(CacheLine line) {
+        access(line.getAddr());
+        CacheLine c = new CacheLine(lineSize, addr / (numSets + lineSize));
+        c.set
     }
 
     private CacheLine access(int addr) {
@@ -32,13 +32,17 @@ public class Cache extends Memory {
             Line line = next.access(addr);
             CacheLine c = new CacheLine(line.getLineSize(), tag);
             c.setData(line.getData());
-            //sets[index].put(tag, c);
-            int loc = sets[index].findNext();
-            if sets[index]
+
+            if (sets[index].needsEviction()) {
+                CacheLine e = sets[index].evicted();
+                next.writeLine(e);
+            }
+            
+            sets[index].write(c);
             return c;
         }
         else {
-            return set[index].getLine(tag);
+            return sets[index].getLine(tag);
         }
     }
 }

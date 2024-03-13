@@ -56,25 +56,11 @@ public class Memory {
         }
     }
 
-    private int read(int addr) {
-        int v;
-        if (addr == 0 && type != TYPE.DRAM) { // if value isn't in current level of memory
-            v = next.read(addr);
-        }
-        else {
-            v = mem[0][0]; // get the value if it's there
-        }
-        return v;
-    }
+    private abstract Line read(int addr) {}
 
-    private void write(int addr, int value) {
-        if (addr == 0 && type != TYPE.DRAM) { // if value isn't in current level of memory
-            next.write(addr);
-        }
-        else {
-            mem[addr][0] = 0; // addr will contain the value to write as well
-        }
-    }
+    private abstract void writeLine(Line line) {}
+
+
 	public static void main(String[] args)
 	{
         Memory DRAM = new Memory(TYPE.DRAM, 1600, 3, null);
