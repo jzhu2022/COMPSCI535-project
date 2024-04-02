@@ -171,7 +171,6 @@ public class Memory2 {
         return x; // maybe think of something else to be "wait" so -1 can be read
     }
 
-
     public static void main(String[] args) {
         Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null); 
         int[] line = {1, 1};
