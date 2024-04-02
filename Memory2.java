@@ -41,6 +41,7 @@ public class Memory2 {
             priorities[i] = ways;
             valid[i] = false;
             dirty[i] = false;
+            tags[i] = 0;
             for (int j = 0; j < words; j++) { 
                 mem[i][j] = 0; // data is 0
             }
@@ -49,19 +50,28 @@ public class Memory2 {
 
     }
 
+    public int getCycles() {
+        return cycles;
+    }
+
     private void updatePriorities(int line, int prio) {
-        for (int i = line; i < ways; i++) {
+        //System.out.println("prio: " + prio);
+        int set = (line/ways) * ways;
+        for (int i = set; i < set + ways; i++) {
+            //System.out.print(priorities[i] + "      ");
             if (valid[i] && priorities[i] < prio)
                 priorities[i]++;
-        }   
+        }  
+        //System.out.println();
+        priorities[line] = 0; 
     }
 
     private int inCache(int addr) { // returns line number of addr if it's there, -1 if not
         int set = (addr / words) % (sets); // divide by words to shift over, mod by sets to remove tag
         int tag = addr / (sets * words);   // shift over to get tag
 
-        for (int i = set*ways; i < ways; i++) {
-            if (tags[i] == tag)
+        for (int i = set*ways; i < set*ways + ways; i++) {
+            if (valid[i] && tags[i] == tag)
                 return i;
         }
         return -1;
@@ -71,31 +81,36 @@ public class Memory2 {
         int set = (addr / words) % (sets); 
         int tag = addr / (sets * words);
         
-        int spot = -1, prio = 101; 
-        
-        for (int i = set*ways; i < ways; i++) {
+        int spot = -1, prio = -1; 
+        for (int i = set*ways; i < set*ways + ways; i++) {
+            
             if (!valid[i]) {
                 spot = i;
                 break;
             }
-            if (priorities[i] < prio) {
+            if (priorities[i] > prio) {
                 spot = i;
                 prio = priorities[i];
             }
         }
 
         // need to write back
+        // tag set offset
+        // tag * (set+offset bits) + 
         if (valid[spot]) {
-            if (dirty[spot])  
-                next.access(addr, mem[spot], stage, false);
-            else  
-                prio = ways;
-            
-            updatePriorities(set*ways, prio);
+            if (dirty[spot]) {
+                int eAddr = (tags[spot]*(sets) + (spot/ways)) * words;
+                for (int i = 0; i <= next.getCycles(); i++) 
+                    next.access(eAddr, mem[spot], stage, false);
+            }
+            //else  
+            //  prio = ways; 
+        
         }
 
-        mem[spot] = next.access(addr, new int[0] , stage, true);
-        priorities[spot] = 0;
+        for (int i = 0; i <- next.getCycles(); i++) 
+            mem[spot] = next.access(addr, new int[0] , stage, true);
+
         tags[spot] = tag;
         valid[spot] = true;
         dirty[spot] = false;
@@ -106,6 +121,7 @@ public class Memory2 {
     private int getSpot(int addr) {
         int spot = addr/words;
         if (level != 0) {
+            
             spot = inCache(addr);
             if (spot == -1) {
                 spot = bringIntoCache(addr);
@@ -116,6 +132,7 @@ public class Memory2 {
 
     private int[] read(int addr) { // returns line
         int spot = getSpot(addr);
+        updatePriorities(spot, priorities[spot]);
         return mem[spot];
     }
 
@@ -126,19 +143,25 @@ public class Memory2 {
         else
             mem[spot] = data;
 
+        updatePriorities(spot, priorities[spot]);
         dirty[spot] = true;
+
     }
 
     public void display() {
         for (int i = 0; i < lines; i++) {
+            if (level != 0) System.out.print("tag: " + tags[i] + "    ");
             for (int j = 0; j < words; j++) {
                 System.out.print(mem[i][j] + " ");
             }
+            if (level != 0) System.out.print("   v: " + valid[i] + (valid[i]?" ":"") + " d: " + dirty[i] + (dirty[i]?" ":"") + " priority: " + priorities[i]);
+            
             System.out.println();
         }
     }
 
     public int[] access(int addr, int[] data, int s, boolean isRead) { 
+        System.out.println((level == 0 ? "DRAM":"L" + level) + (isRead ? " read " : " write " + data[0] + " " + data[1] + " at ") + addr + " clock: " + clock);
         if (clock == cycles) {
             currAddr = addr;
             stage = s;
@@ -155,33 +178,53 @@ public class Memory2 {
                 val = new int[1];
                 val[0] = 0;
             }
-            clock--;
-        }
-        else if (clock == 0) {
+        } 
+        if (clock == 0) {
             if (addr == currAddr && s == stage) {
                 clock = cycles;
                 return val;
             }
         }
-        else {
-            if (addr == currAddr && s == stage)
+        if (addr == currAddr && s == stage)
                 clock--;
-        }
+        
         int[] x = {-1};
         return x; // maybe think of something else to be "wait" so -1 can be read
     }
 
+
     public static void main(String[] args) {
         Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null); 
         int[] line = {1, 1};
-        for (int i = 0; i < 5; i++) {
-            DRAM.access(0, line, 0, false);
-        }
         int[] line2 = {0, 1};
+        int[] line3 = {1, 0};
         for (int i = 0; i < 5; i++) {
-            DRAM.access(1, line2, 0, false); // overwrites
+            //DRAM.access(0, line, 0, false);
         }
+
+        Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
+        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+        for (int i = 0; i < 1; i++) {
+            L1.access(1, line, 0, false); // overwrites
+        }
+        
+        for (int i = 0; i < 1; i++) {
+            L1.access(8, line2, 0, false); 
+        }
+        for (int i = 0; i < 1; i++) {
+            L1.access(4, line3, 0, false); // should need to evict
+        }
+        for (int i = 0; i < 1; i++) {
+            L1.access(1, line3, 0, false); // should need to evict
+        }
+        System.out.println("DRAM: ");
         DRAM.display();
+
+        System.out.println("L2: ");
+        L2.display();
+
+        System.out.println("L1: ");
+        L1.display();
         
     }
 }
