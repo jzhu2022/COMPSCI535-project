@@ -7,7 +7,6 @@ public class Memory {
     private int size;
     private int cycles;
     private Memory next;
-    private int[][] mem;
     private int clock;
     private int currAddr;
     private String rw;
@@ -19,12 +18,6 @@ public class Memory {
         this.cycles = cycles;
         clock = cycles;
         this.next = next;
-        // tag | word | dirty | valid
-        mem = new int[size][4];
-        for (int i = 0; i < size; i++) {
-            mem[i][2] = 0;
-            mem[i][3] = 0;
-        }
     }
 
     public int access(String t, int addr) {
@@ -56,6 +49,18 @@ public class Memory {
         }
     }
 
+    getNext() {
+        if (type != TYPE.DRAM) {
+            return next;
+        } else {
+            return null;
+        }
+    }
+
+    getType() {
+        return type;
+    }
+
     private abstract Line read(int addr) {}
 
     private abstract void writeLine(Line line) {}
@@ -64,7 +69,7 @@ public class Memory {
 	public static void main(String[] args)
 	{
         Memory DRAM = new Memory(TYPE.DRAM, 1600, 3, null);
-        Cache L2 = new Memory(TYPE.L2, 1600, 3, DRAM);
+        Cache L2 = new Cache(TYPE.L2, 1600, 3, DRAM, );
         Cache L1 = new Memory(TYPE.L1, 32768, 0, L2);
 
         Scanner scanner = new Scanner(System.in);

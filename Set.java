@@ -15,7 +15,6 @@ public class Set {
         for (int i = 0; i < ways; i++) {
             lines[i] = new CacheLine(l, 0);
         }
-
     } 
 
     public CacheLine read(int tag) {
