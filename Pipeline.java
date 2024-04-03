@@ -8,7 +8,7 @@ public class Pipeline {
 
     private int currentInstructionIndex;
 
-    public int[] registers = new int[16];
+    private int[] registers = new int[16];
     private boolean[] pendingRegisters = new boolean[16];
 
     byte condFlags = 7;
@@ -498,20 +498,16 @@ public class Pipeline {
         Memory2 DRAM = new Memory2(2 * 32, 1, 2, -1, 0, null); 
         Pipeline p = new Pipeline(DRAM);
 
-        for (int i = 0; i < 12; i++) {
+
+        while(p.inFlightInstructions[3].instruction != -201326592) {
+            int cheat = p.inFlightInstructions[3].instruction;
             p.cycle();
-            System.out.println(p.inFlightInstructions[1].instruction);
-            for (int j = 0; j < 3; j++) {
-                System.out.print(p.pendingRegisters[j] + ", ");
-            }
-            System.out.println();
-            for (int j = 0; j < 3; j++) {
-                System.out.print(p.registers[j] + ", ");
-            }
-            System.out.println();
-
+            System.out.println("fetching: " + Integer.toBinaryString(p.inFlightInstructions[0].instruction));
+            System.out.println("decoding: " + Integer.toBinaryString(p.inFlightInstructions[1].instruction));
+            System.out.println("executing: " + Integer.toBinaryString(p.inFlightInstructions[2].instruction));
+            System.out.println("Memory: " + Integer.toBinaryString(p.inFlightInstructions[3].instruction));
+            System.out.println("Writeback: " + Integer.toBinaryString(cheat));
+            System.out.println("Registers: " + p.registers[0] + ", " + p.registers[1] + ", " + p.registers[2] + "\n\n");
         }
-
-        System.out.println(p.registers[2]);
     }
 }

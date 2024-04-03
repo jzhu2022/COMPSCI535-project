@@ -9,7 +9,7 @@ public class Memory2 {
     private int clock;
     private int cycles;
     
-    private int[][] mem;
+    public int[][] mem;
     private int[] priorities;
     private int[] tags;
     private boolean[] valid;
@@ -151,7 +151,6 @@ public class Memory2 {
 
         updatePriorities(spot, priorities[spot]);
         dirty[spot] = true;
-
     }
 
     public void display() {
