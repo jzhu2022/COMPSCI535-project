@@ -423,7 +423,7 @@ public class Pipeline {
             } else if (i.opcode < 6) {
                 int[] d = {registers[i.result]};
                 int write = memory.access(i.destination, d, 3, false)[0];
-                if (write == -1) {
+                if (write == -1) {  
                     return stall();
                 }
             }

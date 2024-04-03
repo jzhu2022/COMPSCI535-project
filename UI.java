@@ -108,8 +108,8 @@ class UI extends JPanel implements ActionListener {
 		//ui.add(button);
 		//ui.add(label);
 
-		Memory2 m = new Memory2();
-		ui.add(ui.drawMemory(m, 0, 0));
+		/*Memory2 m = new Memory2();
+		ui.add(ui.drawMemory(m, 0, 0));*/
 		frame.add(ui);
 		ui.repaint();
 
