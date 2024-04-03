@@ -9,6 +9,8 @@ public class Instruction {
     public int offset;
     public int immediate;
 
+    public int result;
+
     public Instruction(int i) {
         instruction = i;
     }

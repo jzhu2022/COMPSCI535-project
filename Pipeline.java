@@ -1,35 +1,45 @@
 import java.util.*;
 
 public class Pipeline {
-    public Instruction[] instructionCache = new Instruction[200];
     private Stack<Integer> instructionCounter = new Stack();
     private Instruction[] inFlightInstructions = new Instruction[4];
+
+    private Memory2 memory;
 
     private int currentInstructionIndex;
 
     public int[] registers = new int[16];
     private boolean[] pendingRegisters = new boolean[16];
-    private int tempRegister;
-    private int[] memory = new int[256];
 
     byte condFlags = 7;
 
-    public Pipeline() {
+    public Pipeline(Memory2 memory) {
         currentInstructionIndex = 0;
-        tempRegister = -1;
+        
+        this.memory = memory;
 
         fillInstructionCache();
     }
     
     private void fillInstructionCache() {
-        for (int i = 0; i < instructionCache.length; i++) {
-            instructionCache[i] = new Instruction(-738197504);
+        int[] i1 = {-306184190, 0};
+        int[] i2 = {-305922046, 0};
+        int[] i3 = {-536345600, 0};
+        memory.access(0, i1, 0, false);
+        memory.access(2, i2, 0, false);
+        memory.access(4, i3, 0, false);
+
+        int[] i4 = {-201326592, 0};
+        for (int i = 6; i < 32; i += 2) {
+            memory.access(i, i4, 0, false);
+            //instructionCache[i].cond = 6;
         }
         for (int i = 0; i < inFlightInstructions.length; i++) {
             inFlightInstructions[i] = new Instruction(-1073741824);//squash instructions in pipeline
+            inFlightInstructions[i].cond = 6;
         }
-
     }
+
     private void squashPipeline() {
         for (int i = 0; i < inFlightInstructions.length; i++) {
             inFlightInstructions[i].cond = 6;//squash instructions in pipeline
@@ -37,59 +47,80 @@ public class Pipeline {
     }
 
     public Instruction fetch() {
-        return instructionCache[currentInstructionIndex++];
+        //return instructionCache[currentInstructionIndex++];
+        int read = memory.access(currentInstructionIndex++, null, 0, true)[0];
+        if (read == -1) {
+            return stall();
+        } else {
+            return new Instruction(memory.access(currentInstructionIndex++, null, 0, true)[0]);
+        }
+    }
+
+    private Instruction stall() {
+        Instruction i = new Instruction(-1610612736);
+        i.cond = 5;
+        return i;
     }
 
     public Instruction decode(Instruction i) {
         i.cond = i.instruction >>> 29;
         i.type = i.instruction << 3 >>> 29;
         i.opcode = i.instruction << 6 >>> 28;
-        if (i.cond == 6) {
+        if (i.cond == 6 || i.cond == 5) {
             return i;
         } else if (i.type == 0) {//integer arithmetic
             if (i.opcode == 10) {//comparison format 1
                 i.source1 = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    return stall();
                 }
-                pendingRegisters[i.source1] = true;
                 i.source2 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    return new Instruction(-1073741824);
+                    return stall();
                 }
+                pendingRegisters[i.source1] = true;
                 pendingRegisters[i.source2] = true;
                 i.immediate = i.instruction << 22 >>> 22;
             } else if (i.opcode == 11) {//comparison format 2
                 i.source1 = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
                 pendingRegisters[i.source1] = true;
-                i.immediate = i.instruction << 14 >>> 28;
+                i.immediate = i.instruction << 14 >>> 18;
             } else if (i.opcode % 2 == 0) {//even arithmetic have the same format
                 i.destination = i.instruction << 10 >>> 28;
-                pendingRegisters[i.destination] = true;
+                if (pendingRegisters[i.destination]) {
+                    
+                    return stall();
+                }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.source1] = true;
                 i.source2 = i.instruction << 18 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
+                pendingRegisters[i.source1] = true;
                 pendingRegisters[i.source2] = true;
-                i.offset = i.instruction << 22 >>> 22;
+                i.immediate = i.instruction << 22 >>> 22;
             } else {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.destination] = true;
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
                 pendingRegisters[i.source1] = true;
                 i.immediate = i.instruction << 22 >>> 22;
             }
@@ -97,49 +128,57 @@ public class Pipeline {
             if (i.opcode == 8) {
                 i.source1 = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.source1] = true;
                 i.source2 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.source1] = true;
                 pendingRegisters[i.source2] = true;
                 i.immediate = i.instruction << 22 >>> 22;
             } else if  (i.opcode == 9) {
                 i.source1 = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
                 pendingRegisters[i.source1] = true;
                 i.immediate = i.instruction << 14 >>> 14;
             } else if (i.opcode % 2 == 0) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.destination] = true;
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.source1] = true;
                 i.source2 = i.instruction << 18 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
+                pendingRegisters[i.source1] = true;
                 pendingRegisters[i.source2] = true;
                 i.offset = i.instruction << 22 >>> 22;
             } else {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.destination] = true;
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
                 pendingRegisters[i.source1] = true;
                 i.immediate = i.instruction << 22 >>> 22;
             }
@@ -147,76 +186,98 @@ public class Pipeline {
             if (i.opcode == 0 || i.opcode == 2) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.destination] = true;
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.source1] = true;
                 i.source2 = i.instruction << 18 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
+                pendingRegisters[i.source1] = true;
                 pendingRegisters[i.source2] = true;
                 i.offset = i.instruction << 22 >>> 22;
             } else if (i.opcode == 1 || i.opcode == 3) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.destination] = true;
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
                 pendingRegisters[i.source1] = true;
                 i.immediate = i.instruction << 22 >>> 22;
             } else if (i.opcode == 4 || i.opcode == 5) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.destination] = true;
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
                 pendingRegisters[i.source1] = true;
                 i.immediate = i.instruction << 22 >>> 22;
             } else {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
-                pendingRegisters[i.destination] = true;
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
+                pendingRegisters[i.destination] = true;
                 pendingRegisters[i.source1] = true;
                 i.immediate = i.instruction << 22 >>> 22;
             }
         } else if (i.type == 3) {
-            i.destination = i.instruction << 10 >>> 28;
-            if (pendingRegisters[i.destination]) {
-                return new Instruction(-1073741824);
+            if (i.opcode < 7) {
+                i.destination = i.instruction << 10 >>> 28;
+                if (pendingRegisters[i.destination]) {
+                    
+                    return stall();
+                }
+                i.source1 = i.instruction << 14 >>> 28;
+                if (pendingRegisters[i.source1]) {
+                    
+                    return stall();
+                }
+                pendingRegisters[i.destination] = true;
+                pendingRegisters[i.source1] = true;
+                i.immediate = i.instruction << 18 >>> 18;
+            } else if (i.opcode == 7) {
+                i.destination = i.instruction << 10 >>> 28;
+                if (pendingRegisters[i.destination]) {
+                    
+                    return stall();
+                }
+                pendingRegisters[i.destination] = true;
+                i.immediate = i.instruction << 14 >>> 14;
             }
-            pendingRegisters[i.destination] = true;
-            i.source1 = i.instruction << 14 >>> 28;
-            if (pendingRegisters[i.source1]) {
-                return new Instruction(-1073741824);
-            }
-            pendingRegisters[i.source1] = true;
-            i.immediate = i.instruction << 22 >>> 22;
         } else if (i.type == 4) {
             if (i.opcode < 3) {
                 i.immediate = i.instruction << 22 >>> 22;
             } else if (i.opcode == 3) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    return new Instruction(-1073741824);
+                    
+                    return stall();
                 }
                 pendingRegisters[i.destination] = true;
                 i.immediate = i.instruction << 14 >>> 14;
@@ -244,62 +305,36 @@ public class Pipeline {
     }
 
     public Instruction execute(Instruction i) {
-        /*
-        if (i.cond == 6) {
+        i.result = 0;
+
+        if (i.cond == 6 || i.cond == 5) {
             return i;
         } else if (i.type == 0) {//integer arithmetic
-            if (i.opcode == 10 && (pendingRegisters[i.source1] || pendingRegisters[i.source2])) {//comparison format 1
-                return new Instruction(-1073741824);
-            } else if (i.opcode == 11 && pendingRegisters[i.source1]) {//comparison format 2
-            } else if (i.opcode % 2 == 0 && (pendingRegisters[i.destination] && pendingRegisters[i.source1] && pendingRegisters[i.source2])) {//even arithmetic have the same format
-            } else if (pendingRegisters[i.destination] || pendingRegisters[i.source1]) {
-            }
-        } else if (i.type == 1) {
-            if (i.opcode == 8 && (pendingRegisters[i.source1] || pendingRegisters[i.source2])) {
-            } else if  (i.opcode == 9 && pendingRegisters[i.source1]) {
-            } else if (i.opcode % 2 == 0 && (pendingRegisters[i.destination] || pendingRegisters[i.source1] || pendingRegisters[i.source2])) {
-            } else if (pendingRegisters[i.destination] || pendingRegisters[i.source1]) {
-            }
-        } else if (i.type == 2) {
-            if ((i.opcode == 0 || i.opcode == 2) && (pendingRegisters[i.destination] || pendingRegisters[i.source1] || pendingRegisters[i.source2]) {
-            } else if ((i.opcode == 1 || i.opcode == 3) && (pendingRegisters[i.destination] || pendingRegisters[i.source1])) {
-            } else if ((i.opcode == 4 || i.opcode == 5) && (pendingRegisters[i.destination] || pendingRegisters[i.source1])) {
-            } else if (pendingRegisters[i.destination] || pendingRegisters[i.source1]){
-            }
-        } else if (i.type == 3 && (pendingRegisters[i.destination] || pendingRegisters[i.source1])) {
-        } else if (i.type == 4 && i.opcode == 3 && pendingRegisters[i.destination]) {
-        } else if (i.type == 5){
-            //do nothing
-        } else {
-            System.out.println("bad typecode");
-        }*/
-
-        if (i.type == 0) {//integer arithmetic
             if (i.opcode == 10) {//comparison format 1
                 setFlags(i.source1, i.source2);
             } else if (i.opcode == 11) {//comparison format 2
                 setFlags(i.source1, i.immediate);
             }
             if (i.opcode == 0) {
-                tempRegister = registers[i.source1] + registers[i.source2];
+                i.result = registers[i.source1] + registers[i.source2];
             } else if (i.opcode == 1) {
-                tempRegister = registers[i.source1] + i.immediate;
+                i.result = registers[i.source1] + i.immediate;
             } else if (i.opcode == 2) {
-                tempRegister = registers[i.source1] - registers[i.source2];
+                i.result = registers[i.source1] - registers[i.source2];
             } else if (i.opcode == 3) {
-                tempRegister = registers[i.source1] - i.immediate;
+                i.result = registers[i.source1] - i.immediate;
             } else if (i.opcode == 4) {
-                tempRegister = registers[i.source1] * registers[i.source2];
+                i.result = registers[i.source1] * registers[i.source2];
             } else if (i.opcode == 5) {
-                tempRegister = registers[i.source1] * i.immediate;
+                i.result = registers[i.source1] * i.immediate;
             } else if (i.opcode == 6) {
-                tempRegister = registers[i.source1] / registers[i.source2];
+                i.result = registers[i.source1] / registers[i.source2];
             } else if (i.opcode == 7) {
-                tempRegister = registers[i.source1] / i.immediate;
+                i.result = registers[i.source1] / i.immediate;
             } else if (i.opcode == 8) {
-                tempRegister = registers[i.source1] % registers[i.source2];
+                i.result = registers[i.source1] % registers[i.source2];
             } else if (i.opcode == 9) {
-                tempRegister = registers[i.source1] % i.immediate;
+                i.result = registers[i.source1] % i.immediate;
             }
         } else if (i.type == 1) {
             if (i.opcode == 8) {//comparison format 1
@@ -308,21 +343,21 @@ public class Pipeline {
                 setFlags(i.source1, i.immediate);
             }
             if (i.opcode == 0) {
-                tempRegister = registers[i.source1] + registers[i.source2];
+                i.result = registers[i.source1] + registers[i.source2];
             } else if (i.opcode == 1) {
-                tempRegister = registers[i.source1] + i.immediate;
+                i.result = registers[i.source1] + i.immediate;
             } else if (i.opcode == 2) {
-                tempRegister = registers[i.source1] - registers[i.source2];
+                i.result = registers[i.source1] - registers[i.source2];
             } else if (i.opcode == 3) {
-                tempRegister = registers[i.source1] - i.immediate;
+                i.result = registers[i.source1] - i.immediate;
             } else if (i.opcode == 4) {
-                tempRegister = registers[i.source1] * registers[i.source2];
+                i.result = registers[i.source1] * registers[i.source2];
             } else if (i.opcode == 5) {
-                tempRegister = registers[i.source1] * i.immediate;
+                i.result = registers[i.source1] * i.immediate;
             } else if (i.opcode == 6) {
-                tempRegister = registers[i.source1] / registers[i.source2];
+                i.result = registers[i.source1] / registers[i.source2];
             } else if (i.opcode == 7) {
-                tempRegister = registers[i.source1] / i.immediate;
+                i.result = registers[i.source1] / i.immediate;
             }
         } else if (i.type == 2) {
             if (i.opcode == 8) {//comparison format 1
@@ -331,36 +366,36 @@ public class Pipeline {
                 setFlags(i.source1, i.immediate);
             }
             if (i.opcode == 0) {
-                tempRegister = registers[i.source1] & registers[i.source2];
+                i.result = registers[i.source1] & registers[i.source2];
             } else if (i.opcode == 1) {
-                tempRegister = registers[i.source1] & i.immediate;
+                i.result = registers[i.source1] & i.immediate;
             } else if (i.opcode == 2) {
-                tempRegister = registers[i.source1] | registers[i.source2];
+                i.result = registers[i.source1] | registers[i.source2];
             } else if (i.opcode == 3) {
-                tempRegister = registers[i.source1] | i.immediate;
+                i.result = registers[i.source1] | i.immediate;
             } else if (i.opcode == 4) {
-                tempRegister = ~registers[i.source1];
+                i.result = ~registers[i.source1];
             } else if (i.opcode == 5) {
-                tempRegister = ~registers[i.source1];
+                i.result = ~registers[i.source1];
             } else if (i.opcode == 6) {
-                tempRegister = registers[i.source1] << i.immediate;
+                i.result = registers[i.source1] << i.immediate;
             } else if (i.opcode == 7) {
-                tempRegister = registers[i.source1] >>> i.immediate;
+                i.result = registers[i.source1] >>> i.immediate;
             } else if (i.opcode == 8) {
-                tempRegister = registers[i.source1] << i.immediate;
+                i.result = registers[i.source1] << i.immediate;
             } else if (i.opcode == 9) {
-                tempRegister = registers[i.source1] >> i.immediate;
+                i.result = registers[i.source1] >> i.immediate;
             }
         } else if (i.type == 3) {
             if (i.opcode < 3) {
-                tempRegister = i.source1 + i.immediate;
+                i.result = i.source1 + i.immediate;
             } else if (i.opcode < 6) {
-                tempRegister = registers[i.source1 + i.immediate];
+                i.result = registers[i.source1 + i.immediate];
             } else if (i.opcode < 8) {
                 if (i.opcode == 6) {
-                    tempRegister = registers[i.source1];
+                    i.result = registers[i.source1];
                 } else if (i.opcode == 7) {
-                    tempRegister = i.immediate;
+                    i.result = i.immediate;
                 }
             }
         } else if (i.type == 4) {
@@ -374,13 +409,23 @@ public class Pipeline {
     }
 
     public Instruction memory(Instruction i) {
-        if (i.cond == 6) {
+        if (i.cond == 6 || i.cond == 5) {
             return i;
         } else if (i.type == 3) {
             if (i.opcode < 3) {
-                registers[i.destination] = memory[tempRegister];
+                int read = memory.access(i.destination, null, 3, true)[0];
+                if (read == -1) {
+                    return stall();
+                } else {
+                    registers[i.destination] = read;
+                }
+        
             } else if (i.opcode < 6) {
-                memory[i.destination] = registers[tempRegister];
+                int[] d = {registers[i.result]};
+                int write = memory.access(i.destination, d, 3, false)[0];
+                if (write == -1) {
+                    return stall();
+                }
             }
         }
         return i;
@@ -388,21 +433,20 @@ public class Pipeline {
 
     public Instruction writeback(Instruction i) {
         //write value out to register
-        if (i.cond == 6) {
+        if (i.cond == 6 || i.cond == 5) {
             return i;
         } else if (i.type == 0) {
             if (i.opcode >= 0 && i.opcode < 10) {
-                registers[i.destination] = tempRegister;
+                registers[i.destination] = i.result;
                 pendingRegisters[i.destination] = false;
             }
             if (i.opcode % 2 == 0) {
                 pendingRegisters[i.source2] = false;
             }
             pendingRegisters[i.source1] = false;
-
         } else if (i.type == 1) {
             if (i.opcode >= 0 && i.opcode < 8) {
-                registers[i.destination] = tempRegister;
+                registers[i.destination] = i.result;
                 pendingRegisters[i.destination] = false;
             }
             if (i.opcode % 2 == 0) {
@@ -412,14 +456,14 @@ public class Pipeline {
 
         }  else if (i.type == 2) {
             pendingRegisters[i.destination] = false;
-            registers[i.destination] = tempRegister;
+            registers[i.destination] = i.result;
 
             pendingRegisters[i.source1] = false;
             if (i.opcode < 4 && i.opcode % 2 == 0) {
                 pendingRegisters[i.source2] = false;
             }
         } else if (i.type == 3) {
-            registers[i.destination] = tempRegister;
+            registers[i.destination] = i.result;
             pendingRegisters[i.destination] = false;
             pendingRegisters[i.source1] = false;
         } else if (i.type == 4) {
@@ -444,39 +488,29 @@ public class Pipeline {
         inFlightInstructions[3] = memory(inFlightInstructions[2]);
         inFlightInstructions[2] = execute(inFlightInstructions[1]);
         
-        Instruction tmp = decode(inFlightInstructions[0]);
-        if (tmp.cond != 6) {
-            inFlightInstructions[1] = tmp;
-            inFlightInstructions[0] = fetch();            
+        inFlightInstructions[1] = decode(inFlightInstructions[0]);
+        if (inFlightInstructions[1].cond != 5) {
+            inFlightInstructions[0] = fetch();
         }
     }
 
     public static void main(String[] args) {
-        Instruction i1 = new Instruction(-306184190);
-        Instruction i2 = new Instruction(-305922046);
-        Instruction i3 = new Instruction(-536345600);
+        Memory2 DRAM = new Memory2(2 * 32, 1, 2, -1, 0, null); 
+        Pipeline p = new Pipeline(DRAM);
 
-        
-        Pipeline p = new Pipeline();
-        
-        p.instructionCache[0] = i1;
-        p.instructionCache[1] = i2;
-        p.instructionCache[2] = i3;
-
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 12; i++) {
             p.cycle();
+            System.out.println(p.inFlightInstructions[1].instruction);
+            for (int j = 0; j < 3; j++) {
+                System.out.print(p.pendingRegisters[j] + ", ");
+            }
+            System.out.println();
+            for (int j = 0; j < 3; j++) {
+                System.out.print(p.registers[j] + ", ");
+            }
+            System.out.println();
+
         }
-        /*
-        p.decode(i1);
-        p.execute(i1);
-        p.writeback(i1);
-        p.decode(i2);
-        p.execute(i2);
-        p.writeback(i2);
-        p.decode(i3);
-        p.execute(i3);
-        p.writeback(i3);
-        */
 
         System.out.println(p.registers[2]);
     }

@@ -7,6 +7,6 @@ public class Clock {
         pipeline = new Pipeline();
     }
     public void cycle() {
-        pipeline.writeBack()
+        pipeline.cycle()
     }
 }
