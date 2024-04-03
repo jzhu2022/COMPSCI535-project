@@ -9,7 +9,7 @@ public class Memory2 {
     private int clock;
     private int cycles;
     
-    public int[][] mem;
+    private int[][] mem;
     private int[] priorities;
     private int[] tags;
     private boolean[] valid;
@@ -73,6 +73,7 @@ public class Memory2 {
     }
 
     private int inCache(int addr) { // returns line number of addr if it's there, -1 if not
+        System.out.println("words: "+size);
         int set = (addr / words) % (sets); // divide by words to shift over, mod by sets to remove tag
         int tag = addr / (sets * words);   // shift over to get tag
 
@@ -151,6 +152,7 @@ public class Memory2 {
 
         updatePriorities(spot, priorities[spot]);
         dirty[spot] = true;
+
     }
 
     public void display() {
@@ -177,8 +179,19 @@ public class Memory2 {
         return part;
     }
 
+    public void printPart(int start, int end) {
+        
+        for (int i = start; i <= end; i++) {
+            for (int j = 0; j < words; j++) {
+                
+                System.out.print(mem[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
     public int[] access(int addr, int[] data, int s, boolean isRead) { 
-        System.out.println((level == 0 ? "DRAM":"L" + level) + (isRead ? " read " : " write " + data[0] + " " + data[1] + " at ") + addr + " clock: " + clock);
+        //System.out.println((level == 0 ? "DRAM":"L" + level) + (isRead ? " read " : " write " + data[0] + " " + data[1] + " at ") + addr + " clock: " + clock);
         if (clock == cycles) {
             currAddr = addr;
             stage = s;
