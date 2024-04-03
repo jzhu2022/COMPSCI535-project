@@ -50,8 +50,14 @@ public class Memory2 {
 
     }
 
+    public Memory2(){}
+
     public int getCycles() {
         return cycles;
+    }
+
+    public int getWords() {
+        return words;
     }
 
     private void updatePriorities(int line, int prio) {
@@ -158,6 +164,18 @@ public class Memory2 {
             
             System.out.println();
         }
+    }
+
+    public Integer[][] displayPart(int start, int end) {
+        
+        Integer[][] part = new Integer[end - start+1][words];
+        for (int i = start; i <= end; i++) {
+            for (int j = 0; j < words; j++) {
+                
+                part[i-start][j] = mem[i][j];
+            }
+        }
+        return part;
     }
 
     public int[] access(int addr, int[] data, int s, boolean isRead) { 

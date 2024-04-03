@@ -73,7 +73,7 @@ class UI extends JPanel implements ActionListener {
 			a[i] = i;
 		}
 		JTable mem = new JTable(m.displayPart(start, end), a);
-		return mem;
+				return mem;
 
 	}
 
@@ -107,6 +107,12 @@ class UI extends JPanel implements ActionListener {
 		//ui.add(t);
 		//ui.add(button);
 		//ui.add(label);
+
+		ui.setLayout(null);
+		Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null); 
+		JTable table = ui.drawMemory(DRAM, 0, 7);
+		table.setBounds(20, 200, 200, 150);
+		ui.add(table);
 
 		/*Memory2 m = new Memory2();
 		ui.add(ui.drawMemory(m, 0, 0));*/
