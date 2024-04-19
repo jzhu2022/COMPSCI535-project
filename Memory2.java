@@ -15,6 +15,9 @@ public class Memory2 {
     private boolean[] valid;
     private boolean[] dirty;
 
+    private Data wait = new Data(false, new int[1]);
+    private Data done = new Data(true, new int[1]);
+
     private int currAddr;
     private int stage; // 0 for fetch, 1 for decode, etc
     private int[] val;
@@ -73,7 +76,6 @@ public class Memory2 {
     }
 
     private int inCache(int addr) { // returns line number of addr if it's there, -1 if not
-        System.out.println("words: "+size);
         int set = (addr / words) % (sets); // divide by words to shift over, mod by sets to remove tag
         int tag = addr / (sets * words);   // shift over to get tag
 
@@ -84,7 +86,7 @@ public class Memory2 {
         return -1;
     }
 
-    private int bringIntoCache(int addr) {
+    private Data bringIntoCache(int addr) {
         int set = (addr / words) % (sets); 
         int tag = addr / (sets * words);
         
@@ -115,44 +117,60 @@ public class Memory2 {
         
         }
 
-        for (int i = 0; i <- next.getCycles(); i++) 
-            mem[spot] = next.access(addr, new int[0] , stage, true);
+         
+        Data nextLevel = next.access(addr, new int[0] , stage, true);
+        if (!nextLevel.done) return wait;
 
         tags[spot] = tag;
         valid[spot] = true;
         dirty[spot] = false;
 
-        return spot;
+        int[] spotArr =  {spot};
+        done.data = spotArr;
+        return done;
     }
 
-    private int getSpot(int addr) {
+    private Data getSpot(int addr) {
         int spot = addr/words;
         if (level != 0) {
             
             spot = inCache(addr);
             if (spot == -1) {
-                spot = bringIntoCache(addr);
+                Data s = bringIntoCache(addr);
+                if (!s.done) return wait;
+                spot = s.data[0];
             }
         }
-        return spot;
+
+        int[] spotArr = {spot};
+        done.data = spotArr;
+        return done;
     }
 
-    private int[] read(int addr) { // returns line
-        int spot = getSpot(addr);
+    private Data read(int addr) { // returns line
+        Data s = getSpot(addr);
+        if (!s.done) return wait;
+
+        int spot = s.data[0];
         updatePriorities(spot, priorities[spot]);
-        return mem[spot];
+        done.data = mem[spot];
+        return done;
     }
 
-    private void write(int addr, int[] data) {
-        int spot = getSpot(addr);
-        if (level == 1) 
+    private Data write(int addr, int[] data) {
+        Data s = getSpot(addr);
+        if (!s.done) return wait;
+
+        int spot = s.data[0];
+        if (level == 1) {
             mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
-        else
+        } else {
             mem[spot] = data;
+        }
 
         updatePriorities(spot, priorities[spot]);
         dirty[spot] = true;
-
+        return done;
     }
 
     public void display() {
@@ -190,36 +208,44 @@ public class Memory2 {
         }
     }
 
-    public int[] access(int addr, int[] data, int s, boolean isRead) { 
+    public Data access(int addr, int[] data, int s, boolean isRead) { 
         //System.out.println((level == 0 ? "DRAM":"L" + level) + (isRead ? " read " : " write " + data[0] + " " + data[1] + " at ") + addr + " clock: " + clock);
+        Data a;
         if (clock == cycles) {
+        
             currAddr = addr;
             stage = s;
+        }
+        if (currAddr == addr && stage == s) { 
+            clock--;
             if (isRead) {
-                val = read(addr);
+                a = read(addr);
+                if (!a.done) return wait;
                 if (level == 1) {
                     int v = val[addr % words];
                     val = new int[1];
                     val[0] = v; // if this is L1 read, return array with desired word only
                 }
+                
             }
             else {
-                write(addr, data);
+                a = write(addr, data);
+                if (!a.done) return wait;
                 val = new int[1];
                 val[0] = 0;
             }
-        } 
-        if (clock == 0) {
-            if (addr == currAddr && s == stage) {
-                clock = cycles;
-                return val;
-            }
-        }
-        if (addr == currAddr && s == stage)
-                clock--;
         
-        int[] x = {-1};
-        return x; // maybe think of something else to be "wait" so -1 can be read
+            done.data = val;
+        
+            
+            if (clock <= 0) {
+                clock = cycles;
+                return done;
+            }
+            
+        }
+        
+        return wait;
     }
 
 
@@ -234,19 +260,11 @@ public class Memory2 {
 
         Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
         Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
-        for (int i = 0; i < 1; i++) {
-            L1.access(1, line, 0, false); // overwrites
+        
+        while (!(L1.access(8, line, 0, false)).done) {
+             
         }
         
-        for (int i = 0; i < 1; i++) {
-            L1.access(8, line2, 0, false); 
-        }
-        for (int i = 0; i < 1; i++) {
-            L1.access(4, line3, 0, false); // should need to evict
-        }
-        for (int i = 0; i < 1; i++) {
-            L1.access(1, line3, 0, false); // should need to evict
-        }
         System.out.println("DRAM: ");
         DRAM.display();
 
