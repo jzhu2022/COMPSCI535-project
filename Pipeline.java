@@ -8,7 +8,7 @@ public class Pipeline {
 
     private int currentInstructionIndex;
 
-    private int[] registers = new int[16];
+    public int[] registers = new int[16];
     private boolean[] pendingRegisters = new boolean[16];
 
     byte condFlags = 7;
@@ -21,7 +21,14 @@ public class Pipeline {
         fillInstructionCache();
     }
     
-    private void fillInstructionCache() {
+    public void fillInstructionCache() {
+        //addition
+        int[] iHALT = {-201326592, 0};
+        for (int i = 0; i < 32; i += 2) {
+            memory.access(i, iHALT, 0, false);
+            //instructionCache[i].cond = 6;
+        }
+
         int[] i1 = {-306184190, 0};
         int[] i2 = {-305922046, 0};
         int[] i3 = {-536345600, 0};
@@ -46,7 +53,7 @@ public class Pipeline {
         }
     }
 
-    public Instruction fetch() {
+    private Instruction fetch() {
         //return instructionCache[currentInstructionIndex++];
         Data read = memory.access(currentInstructionIndex++, null, 0, true);
         if (!read.done) {
@@ -62,7 +69,7 @@ public class Pipeline {
         return i;
     }
 
-    public Instruction decode(Instruction i) {
+    private Instruction decode(Instruction i) {
         i.cond = i.instruction >>> 29;
         i.type = i.instruction << 3 >>> 29;
         i.opcode = i.instruction << 6 >>> 28;
@@ -84,7 +91,6 @@ public class Pipeline {
             } else if (i.opcode == 11) {//comparison format 2
                 i.source1 = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.source1] = true;
@@ -92,17 +98,14 @@ public class Pipeline {
             } else if (i.opcode % 2 == 0) {//even arithmetic have the same format
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 i.source2 = i.instruction << 18 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -112,12 +115,10 @@ public class Pipeline {
             } else {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -128,12 +129,10 @@ public class Pipeline {
             if (i.opcode == 8) {
                 i.source1 = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 i.source2 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.source1] = true;
@@ -142,7 +141,6 @@ public class Pipeline {
             } else if  (i.opcode == 9) {
                 i.source1 = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.source1] = true;
@@ -150,17 +148,14 @@ public class Pipeline {
             } else if (i.opcode % 2 == 0) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 i.source2 = i.instruction << 18 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -170,12 +165,10 @@ public class Pipeline {
             } else {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -186,17 +179,14 @@ public class Pipeline {
             if (i.opcode == 0 || i.opcode == 2) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 i.source2 = i.instruction << 18 >>> 28;
                 if (pendingRegisters[i.source2]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -206,12 +196,10 @@ public class Pipeline {
             } else if (i.opcode == 1 || i.opcode == 3) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -220,12 +208,10 @@ public class Pipeline {
             } else if (i.opcode == 4 || i.opcode == 5) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -234,12 +220,10 @@ public class Pipeline {
             } else {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 i.source1 = i.instruction << 14 >>> 28;
                 if (pendingRegisters[i.source1]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -264,7 +248,6 @@ public class Pipeline {
             } else if (i.opcode == 7) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -276,7 +259,6 @@ public class Pipeline {
             } else if (i.opcode == 3) {
                 i.destination = i.instruction << 10 >>> 28;
                 if (pendingRegisters[i.destination]) {
-                    
                     return stall();
                 }
                 pendingRegisters[i.destination] = true;
@@ -304,7 +286,7 @@ public class Pipeline {
         }
     }
 
-    public Instruction execute(Instruction i) {
+    private Instruction execute(Instruction i) {
         i.result = 0;
 
         if (i.cond == 6 || i.cond == 5) {
@@ -408,7 +390,7 @@ public class Pipeline {
         return i;
     }
 
-    public Instruction memory(Instruction i) {
+    private Instruction memory(Instruction i) {
         if (i.cond == 6 || i.cond == 5) {
             return i;
         } else if (i.type == 3) {
@@ -431,7 +413,7 @@ public class Pipeline {
         return i;
     }
 
-    public Instruction writeback(Instruction i) {
+    private Instruction writeback(Instruction i) {
         //write value out to register
         if (i.cond == 6 || i.cond == 5) {
             return i;
@@ -483,15 +465,31 @@ public class Pipeline {
         return i;
     }
 
-    void cycle() {
+    public boolean notEndOfProgram() {
+        return inFlightInstructions[0].instruction != -201326592 || inFlightInstructions[1].instruction != -201326592 || inFlightInstructions[2].instruction != -201326592 || inFlightInstructions[3].instruction != -201326592;
+    }
+
+    public Instruction[] cycle() {
+        Instruction[] readOut = new Instruction[5];
+        readOut[4] = inFlightInstructions[3];
+
         writeback(inFlightInstructions[3]);
+
         inFlightInstructions[3] = memory(inFlightInstructions[2]);
+        readOut[3] = inFlightInstructions[3];
+
         inFlightInstructions[2] = execute(inFlightInstructions[1]);
+        readOut[2] = inFlightInstructions[2];
         
         inFlightInstructions[1] = decode(inFlightInstructions[0]);
+        readOut[1] = inFlightInstructions[1];
+
         if (inFlightInstructions[1].cond != 5) {
             inFlightInstructions[0] = fetch();
         }
+        readOut[0] = inFlightInstructions[0];
+
+        return readOut;
     }
 
     public static void main(String[] args) {
@@ -499,7 +497,9 @@ public class Pipeline {
         Pipeline p = new Pipeline(DRAM);
 
 
-        while(p.inFlightInstructions[3].instruction != -201326592) {
+        //make sure pending registers are reset
+
+        while(p.inFlightInstructions[0].instruction != -201326592 || p.inFlightInstructions[1].instruction != -201326592 || p.inFlightInstructions[2].instruction != -201326592 || p.inFlightInstructions[3].instruction != -201326592) {
             int cheat = p.inFlightInstructions[3].instruction;
             p.cycle();
             System.out.println("fetching: " + Integer.toBinaryString(p.inFlightInstructions[0].instruction));

@@ -190,7 +190,6 @@ public class Memory2 {
         Integer[][] part = new Integer[end - start+1][words];
         for (int i = start; i <= end; i++) {
             for (int j = 0; j < words; j++) {
-                
                 part[i-start][j] = mem[i][j];
             }
         }
@@ -250,7 +249,7 @@ public class Memory2 {
 
 
     public static void main(String[] args) {
-        Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null); 
+        Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
         int[] line = {1, 1};
         int[] line2 = {0, 1};
         int[] line3 = {1, 0};
@@ -273,6 +272,5 @@ public class Memory2 {
 
         System.out.println("L1: ");
         L1.display();
-        
     }
 }

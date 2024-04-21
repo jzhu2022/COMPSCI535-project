@@ -2,23 +2,39 @@ import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 class UI extends JPanel implements ActionListener {
 	static JTextField t;
 	static JFrame frame;
 	static JButton button;
+	static JButton cycleButton;
 	static JLabel label;
+
+	static DefaultTableModel memTableModel;
+	static DefaultTableModel regTableModel;
+
+	static JTable mem;
+	static JTable reg;
+
 	static int clock; // change type to Clock
 	static int pipeline; // change type to Pipeline
-	private int boxWidth = 70;
+	private int boxWidth = 300;//70
 	private int boxSpace = 30;
 	private int initX = 50;
 	private int initY = 50;
 	private final String[] STAGE_NAMES = {"Fetch", "Decode", "Execute", "Memory", "Writeback"};
 
-	public UI() {
-		
-	}
 
+	private Pipeline pipe;
+	public Instruction[] readOut = {new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824)};
+
+
+	public UI(Memory2 memory) {
+		super();
+
+		pipe = new Pipeline(memory);
+	}
+/*
 	public void display() {
 		frame = new JFrame("textfield");
 
@@ -46,18 +62,15 @@ class UI extends JPanel implements ActionListener {
 		frame.setSize(600, 600);
 		frame.setVisible(true);
 	}
-
+*/
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		drawPipeline(g);
-	
-	
-		
 	}
 
 	private void drawPipeline(Graphics g) {
-		String[] instructions = {"add", "sub", "add", "sub", "mul"}; // placeholder, get values from pipeline
+		String[] instructions = {Integer.toBinaryString(readOut[0].instruction), Integer.toBinaryString(readOut[1].instruction), Integer.toBinaryString(readOut[2].instruction), Integer.toBinaryString(readOut[3].instruction), Integer.toBinaryString(readOut[4].instruction)}; // placeholder, get values from pipeline
 		for (int i = 0; i < 5; i++ ){
 			g.drawRect(initX + i*(boxWidth+boxSpace), initY, boxWidth, boxWidth);
 			if (i != 4) g.drawLine(initX + boxWidth + i*(boxWidth+boxSpace), initY + boxWidth/2,initX + boxWidth + i*(boxWidth+boxSpace)+boxSpace, initY + boxWidth/2);
@@ -72,9 +85,27 @@ class UI extends JPanel implements ActionListener {
 		for (int i = 0; i < a.length; i++) {
 			a[i] = i;
 		}
-		JTable mem = new JTable(m.displayPart(start, end), a);
-		return mem;
 
+		memTableModel = new DefaultTableModel(m.displayPart(start, end), a);
+		mem = new JTable(memTableModel);
+
+		return mem;
+	}
+
+	private JTable drawRegisters() {
+		String[] columnNames = {"Register Addr", "Data"};
+
+		Integer[][] data = new Integer[pipe.registers.length][2];
+
+		for (int i = 0; i < pipe.registers.length; i++) {
+			data[i][0] = i;
+			data[i][1] = pipe.registers[i];
+		}
+		System.out.println(data[0][1]);
+
+		regTableModel = new DefaultTableModel(data, columnNames);
+		reg = new JTable(regTableModel);
+		return reg;
 	}
 
 	// if the button is pressed
@@ -87,35 +118,54 @@ class UI extends JPanel implements ActionListener {
 
 			// set the text of field to blank
 			t.setText(" ");
+		} else if (s.equals("cycle") && pipe.notEndOfProgram()) {
+			readOut = pipe.cycle();
+
+			regTableModel.fireTableDataChanged();
+			remove(reg);
+			add(drawRegisters());
+
+			//memTableModel.fireTableDataChanged();
+			//remove(mem);
+			//cannot redraw memory without reference
+			//add(drawMemory());
+			//repaint();
 		}
 	}
 	public static void main(String[] args) {
-		UI ui = new UI();
-		frame = new JFrame("");
 
+		Memory2 DRAM = new Memory2(2 * 32, 1, 2, -1, 0, null); 
+		
+		UI ui = new UI(DRAM);
+		frame = new JFrame("CS535 Simulator");
+		
 		label = new JLabel("nothing entered");
-
+		
 		button = new JButton("submit");
-
-
+		cycleButton = new JButton("cycle");
+		
 		button.addActionListener(ui);
+		cycleButton.addActionListener(ui);
 
 		t = new JTextField(16);
-
+		
 		JPanel p = new JPanel();
 
-		//ui.add(t);
-		//ui.add(button);
-		//ui.add(label);
+		ui.add(t);
+		ui.add(button);
+		ui.add(cycleButton);
+		ui.add(label);
 
-		Memory2 m = new Memory2(2 * 32, 1, 2, -1, 0, null); 
-		ui.add(ui.drawMemory(m, 0, 0));
+
+		ui.add(ui.drawMemory(DRAM, 0, 0));
+
+		ui.add(ui.drawRegisters());
+
 		frame.add(ui);
-		ui.repaint();
 
+		ui.repaint();
+		
 		frame.setSize(600, 600);
 		frame.setVisible(true);
 	}
-
-	
 }
