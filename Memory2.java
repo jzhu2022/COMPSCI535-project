@@ -222,7 +222,7 @@ public class Memory2 {
                 a = read(addr);
                  
                 if (!a.done) return wait;
-                
+                val = a.data;
                 if (level == 1) {
                     int v = a.data[addr % words];
                     val = new int[1];
@@ -233,8 +233,6 @@ public class Memory2 {
             else {
                 a = write(addr, data);
                 if (!a.done) return wait;
-                val = new int[1];
-                val[0] = 0;
             }
         
             done.data = val;
