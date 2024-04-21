@@ -190,6 +190,7 @@ public class Memory2 {
         Integer[][] part = new Integer[end - start+1][words];
         for (int i = start; i <= end; i++) {
             for (int j = 0; j < words; j++) {
+                
                 part[i-start][j] = mem[i][j];
             }
         }
@@ -219,9 +220,11 @@ public class Memory2 {
             clock--;
             if (isRead) {
                 a = read(addr);
+                 
                 if (!a.done) return wait;
+                
                 if (level == 1) {
-                    int v = val[addr % words];
+                    int v = a.data[addr % words];
                     val = new int[1];
                     val[0] = v; // if this is L1 read, return array with desired word only
                 }
@@ -249,10 +252,10 @@ public class Memory2 {
 
 
     public static void main(String[] args) {
-        Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
+        Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null); 
         int[] line = {1, 1};
-        int[] line2 = {0, 1};
-        int[] line3 = {1, 0};
+        //int[] line2 = {0, 1};
+        //int[] line3 = {1, 0};
         for (int i = 0; i < 5; i++) {
             //DRAM.access(0, line, 0, false);
         }
@@ -263,6 +266,9 @@ public class Memory2 {
         while (!(L1.access(8, line, 0, false)).done) {
              
         }
+
+        while (!(L1.access(8, line, 0, true)).done) {
+        }
         
         System.out.println("DRAM: ");
         DRAM.display();
@@ -272,5 +278,6 @@ public class Memory2 {
 
         System.out.println("L1: ");
         L1.display();
+        
     }
 }
