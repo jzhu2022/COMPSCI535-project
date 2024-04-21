@@ -503,7 +503,7 @@ public class Pipeline {
         Pipeline p = new Pipeline(DRAM);
 
 
-        //make sure pending registers are reset
+        //make sure pending registers are reset when squashing
 
         //while(p.notEndOfProgram()) {
         for (int i = 0; i < 5; i++) {

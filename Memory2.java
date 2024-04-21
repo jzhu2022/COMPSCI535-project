@@ -242,7 +242,6 @@ public class Memory2 {
                 clock = cycles;
                 return done;
             }
-            
         }
         
         return wait;
