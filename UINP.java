@@ -3,7 +3,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-class UI extends JPanel implements ActionListener {
+class UINP extends JPanel implements ActionListener {
 	static JTextField t;
 	static JFrame frame;
 	static JButton button;
@@ -29,7 +29,7 @@ class UI extends JPanel implements ActionListener {
 	public Instruction[] readOut = {new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824)};
 
 
-	public UI(Memory2 memory) {
+	public UINP(Memory2 memory) {
 		super();
 
 		pipe = new Pipeline(memory);
@@ -139,7 +139,7 @@ class UI extends JPanel implements ActionListener {
 		Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
         Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
 		
-		UI ui = new UI(L1);
+		UINP ui = new UINP(L1);
 		frame = new JFrame("CS535 Simulator");
 		
 		label = new JLabel("nothing entered");
