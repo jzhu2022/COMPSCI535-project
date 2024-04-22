@@ -70,12 +70,13 @@ class UI extends JPanel implements ActionListener {
 	}
 
 	private void drawPipeline(Graphics g) {
+		int y = getHeight() - initY - boxWidth;
 		String[] instructions = {Integer.toBinaryString(readOut[0].instruction), Integer.toBinaryString(readOut[1].instruction), Integer.toBinaryString(readOut[2].instruction), Integer.toBinaryString(readOut[3].instruction), Integer.toBinaryString(readOut[4].instruction)}; // placeholder, get values from pipeline
 		for (int i = 0; i < 5; i++ ){
-			g.drawRect(initX + i*(boxWidth+boxSpace), initY, boxWidth, boxWidth);
-			if (i != 4) g.drawLine(initX + boxWidth + i*(boxWidth+boxSpace), initY + boxWidth/2,initX + boxWidth + i*(boxWidth+boxSpace)+boxSpace, initY + boxWidth/2);
-			g.drawString(STAGE_NAMES[i], initX + i*(boxWidth+boxSpace) + (-3*STAGE_NAMES[i].length() + 35), initY+boxWidth+15);
-			g.drawString(instructions[i], initX + i*(boxWidth+boxSpace) + (-3*STAGE_NAMES[i].length() + 40), initY+boxWidth/2);
+			g.drawRect(initX + i*(boxWidth+boxSpace), y, boxWidth, boxWidth);
+			if (i != 4) g.drawLine(initX + boxWidth + i*(boxWidth+boxSpace), y + boxWidth/2,initX + boxWidth + i*(boxWidth+boxSpace)+boxSpace, y + boxWidth/2);
+			g.drawString(STAGE_NAMES[i], initX + i*(boxWidth+boxSpace) + (-3*STAGE_NAMES[i].length() + 35), y+boxWidth+15);
+			g.drawString(instructions[i], initX + i*(boxWidth+boxSpace) + (-3*STAGE_NAMES[i].length() + 40), y+boxWidth/2);
 		}
 		
 	}
