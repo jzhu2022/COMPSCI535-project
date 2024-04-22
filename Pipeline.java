@@ -4,12 +4,14 @@ public class Pipeline {
     private Stack<Integer> instructionCounter = new Stack();
     private Instruction[] inFlightInstructions = new Instruction[4];
 
-    private Memory2 memory;
-
+    public Memory2 memory;
+    
     private int currentInstructionIndex;
-
+    
     public int[] registers = new int[16];
     private boolean[] pendingRegisters = new boolean[16];
+    
+    private int[] instructionRegisters = new int[16];
 
     byte condFlags = 7;
 
@@ -22,34 +24,28 @@ public class Pipeline {
     }
     
     public void fillInstructionCache() {
-        //addition
-        int[] iHALT = {-201326592, 0};
-        for (int i = 0; i < 32; i += 2) {
-            memory.access(i, iHALT, 0, false);
-            //instructionCache[i].cond = 6;
+        int iHALT = -201326592;
+        for (int i = 0; i < instructionRegisters.length; i++) {
+            instructionRegisters[i] = iHALT;
         }
 
-        int[] i1 = {-306184190, 0};
-        int[] i2 = {-305922046, 0};
-        int[] i3 = {-536345600, 0};
-        memory.access(0, i1, 0, false);
-        memory.access(2, i2, 0, false);
-        memory.access(4, i3, 0, false);
-
+        //addition
+        instructionRegisters[0] = -306184190;
+        instructionRegisters[1] = -305922046;
+        instructionRegisters[2] = -536345600;
         //branching
-        int[] i4 = {-490209276, 0};
-        int[] i5 = {268435472, 0};
-        int[] i6 = {-305659896, 0};
-
-        
-        memory.access(6, i4, 0, false);
-        memory.access(8, i5, 0, false);
-        memory.access(10, i6, 0, false);
+        instructionRegisters[3] = -490209276;
+        instructionRegisters[4] = 268435472;
+        instructionRegisters[5] = -305659896;
+        //store then load
+        instructionRegisters[6] = -314048512;
+        instructionRegisters[7] = -335544320;
 
         for (int i = 0; i < inFlightInstructions.length; i++) {
             inFlightInstructions[i] = new Instruction(-1073741824);//squash instructions in pipeline
             inFlightInstructions[i].cond = 6;
         }
+
         memory.display();
     }
 
@@ -59,20 +55,24 @@ public class Pipeline {
         }
     }
 
+    private Instruction stall() {
+        Instruction i = new Instruction(-1610612736);
+        i.cond = 5;
+        return i;
+    }
+
     private Instruction fetch() {
-        Data read = memory.access(currentInstructionIndex++, null, 0, true);
+        /*
+        Data read = memory.access(currentInstructionIndex, null, 0, true);
         if (read.done) {
+            currentInstructionIndex++;
             System.out.println(Arrays.toString(read.data));
             return new Instruction(read.data[0]);
         } else {
             return stall();
         }
-    }
-
-    private Instruction stall() {
-        Instruction i = new Instruction(-1610612736);
-        i.cond = 5;
-        return i;
+        */
+        return new Instruction(instructionRegisters[currentInstructionIndex++]);
     }
 
     private Instruction decode(Instruction i) {
@@ -375,9 +375,7 @@ public class Pipeline {
                 i.result = registers[i.source1] >> i.immediate;
             }
         } else if (i.type == 3) {
-            if (i.opcode < 3) {
-                i.result = i.source1 + i.immediate;
-            } else if (i.opcode < 6) {
+            if (i.opcode < 6) {
                 i.result = registers[i.source1 + i.immediate];
             } else if (i.opcode < 8) {
                 if (i.opcode == 6) {
@@ -401,17 +399,17 @@ public class Pipeline {
             return i;
         } else if (i.type == 3) {
             if (i.opcode < 3) {
-                Data read = memory.access(i.destination, null, 3, true);
+                Data read = memory.access(i.result, null, 3, true);
                 if (read.done) {
-                    registers[i.destination] = read.data[0];
+                    i.result = read.data[0];
                 } else {
                     return stall();
                 }
-        
             } else if (i.opcode < 6) {
-                int[] d = {registers[i.result]};
-                int write = memory.access(i.destination, d, 3, false).data[0];
-                if (write == -1) {  
+                int[] d = {registers[i.destination]};
+                System.out.println(i.result);
+                Data write = memory.access(i.result, d, 3, false);
+                if (!write.done) {  
                     return stall();
                 }
             }
@@ -451,7 +449,9 @@ public class Pipeline {
                 pendingRegisters[i.source2] = false;
             }
         } else if (i.type == 3) {
-            registers[i.destination] = i.result;
+            if (i.opcode < 4 || i.opcode > 6) {
+                registers[i.destination] = i.result;
+            }
             pendingRegisters[i.destination] = false;
             pendingRegisters[i.source1] = false;
         } else if (i.type == 4) {
@@ -484,29 +484,35 @@ public class Pipeline {
         inFlightInstructions[3] = memory(inFlightInstructions[2]);
         readOut[3] = inFlightInstructions[3];
 
-        inFlightInstructions[2] = execute(inFlightInstructions[1]);
-        readOut[2] = inFlightInstructions[2];
-        
-        inFlightInstructions[1] = decode(inFlightInstructions[0]);
-        readOut[1] = inFlightInstructions[1];
+        //check if memory stage generated a stall
+        if (!(inFlightInstructions[3].cond == 5 && inFlightInstructions[2].cond != 5)) {
+            inFlightInstructions[2] = execute(inFlightInstructions[1]);
+            readOut[2] = inFlightInstructions[2];
 
-        if (inFlightInstructions[1].cond != 5) {
-            inFlightInstructions[0] = fetch();
+            inFlightInstructions[1] = decode(inFlightInstructions[0]);
+            readOut[1] = inFlightInstructions[1];
+
+            if (inFlightInstructions[1].cond != 5) {
+                inFlightInstructions[0] = fetch();
+            }
+            readOut[0] = inFlightInstructions[0];
         }
-        readOut[0] = inFlightInstructions[0];
 
         return readOut;
     }
 
     public static void main(String[] args) {
-        Memory2 DRAM = new Memory2(2 * 32, 1, 2, -1, 0, null); 
-        Pipeline p = new Pipeline(DRAM);
+        Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
+        Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
+        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+
+        Pipeline p = new Pipeline(L1);
 
 
         //make sure pending registers are reset when squashing
 
-        //while(p.notEndOfProgram()) {
-        for (int i = 0; i < 5; i++) {
+        while(p.notEndOfProgram()) {
+        //for (int i = 0; i < 5; i++) {
             int cheat = p.inFlightInstructions[3].instruction;
             p.cycle();
             System.out.println("fetching:  " + Integer.toBinaryString(p.inFlightInstructions[0].instruction) + " - " + p.inFlightInstructions[0].instruction);
@@ -516,5 +522,6 @@ public class Pipeline {
             System.out.println("Writeback: " + Integer.toBinaryString(cheat)  + " - " + cheat);
             System.out.println("Registers: " + p.registers[0] + ", " + p.registers[1] + ", " + p.registers[2] + "\n\n");
         }
+        p.memory.display();
     }
 }
