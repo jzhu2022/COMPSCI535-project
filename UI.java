@@ -34,35 +34,7 @@ class UI extends JPanel implements ActionListener {
 
 		pipe = new Pipeline(memory);
 	}
-/*
-	public void display() {
-		frame = new JFrame("textfield");
 
-		label = new JLabel("nothing entered");
-
-		button = new JButton("Cycle Clock");
-
-		//UI te = new UI();
-
-		//button.addActionListener(te);
-
-		t = new JTextField(16);
-
-		JPanel p = new JPanel();
-
-		p.add(t);
-		p.add(button);
-		p.add(label);
-
-		frame.add(p);
-
-		Graphics2D g = (Graphics2D) getGraphics();
-		paintComponent(g);
-
-		frame.setSize(600, 600);
-		frame.setVisible(true);
-	}
-*/
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -102,7 +74,6 @@ class UI extends JPanel implements ActionListener {
 			data[i][0] = i;
 			data[i][1] = pipe.registers[i];
 		}
-		System.out.println(data[0][1]);
 
 		regTableModel = new DefaultTableModel(data, columnNames);
 		reg = new JTable(regTableModel);
@@ -120,24 +91,30 @@ class UI extends JPanel implements ActionListener {
 			// set the text of field to blank
 			t.setText(" ");
 		} else if (s.equals("cycle") && pipe.notEndOfProgram()) {
-			readOut = pipe.cycle();
+			readOut = pipe.cycleNoPipeline();
 
 			regTableModel.fireTableDataChanged();
 			remove(reg);
 			add(drawRegisters());
 
+			memTableModel.fireTableDataChanged();
+			remove(mem);
+			add(drawMemory(pipe.memory, 0, 1));
+
+
 			//memTableModel.fireTableDataChanged();
 			//remove(mem);
 			//cannot redraw memory without reference
 			//add(drawMemory());
-			//repaint();
+			repaint();
 		}
 	}
 	public static void main(String[] args) {
 
-		Memory2 DRAM = new Memory2(2 * 32, 1, 2, -1, 0, null); 
-		Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
+		Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
+        Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
         Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+ 
 		
 		UI ui = new UI(L1);
 		frame = new JFrame("CS535 Simulator");
@@ -160,7 +137,7 @@ class UI extends JPanel implements ActionListener {
 		ui.add(label);
 
 
-		ui.add(ui.drawMemory(DRAM, 0, 0));
+		ui.add(ui.drawMemory(L1, 0, 1));
 
 		ui.add(ui.drawRegisters());
 
