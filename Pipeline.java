@@ -565,8 +565,8 @@ public class Pipeline {
             System.out.println("executing: " + Integer.toBinaryString(p.inFlightInstructions[2].instruction) + " - " + p.inFlightInstructions[2].instruction + " - " + p.inFlightInstructions[2].cond);
             System.out.println("Memory:    " + Integer.toBinaryString(p.inFlightInstructions[3].instruction) + " - " + p.inFlightInstructions[3].instruction + " - " + p.inFlightInstructions[3].cond);
             System.out.println("Writeback: " + Integer.toBinaryString(cheat.instruction)  + " - " + cheat.instruction + " - " + cheat.cond);
-            */
             System.out.println("Registers: " + p.registers[0] + ", " + p.registers[1] + ", " + p.registers[2] + ", " + p.registers[3] + ", " + p.registers[4] + ", " + p.registers[5] + "\n\n");
+            */
             System.out.println("L1:");
             L1.display();
             System.out.println("L2:");

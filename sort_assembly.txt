@@ -1,5 +1,5 @@
 mov r0, #0--address
-mov r1, #4--value
+mov r1, #4--value, initialized to length of array
 .setup
 str r1, r0
 add r0, r0, #1

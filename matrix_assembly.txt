@@ -1,0 +1,16 @@
+mov r0, #0--address
+mov r1, #0--value
+mov r2, #0--count
+.setup
+str r1, r0
+add r0, r0, #1
+add r1, r1, #1
+cmp r1, #4
+bl .setup
+mov r1, #0
+add r2, r2, #1
+cmp r2, #2
+bl .setup--both matrices are created
+mov r0, #0--row
+mov r1, #0--column
+mov r2, #9--address of solution
