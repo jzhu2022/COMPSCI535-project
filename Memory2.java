@@ -24,6 +24,10 @@ public class Memory2 {
 
     private Memory2 next;
 
+    private int coldMisses;
+    private int conMisses;
+    private int hits;
+
     public Memory2(int s, int c, int o, int a, int l, Memory2 n) { // -1 for a if not cache
         level = l;
         next = n;
@@ -50,6 +54,10 @@ public class Memory2 {
             }
         }
         cycles = (clock = c - 1);
+
+        coldMisses = 0;
+        conMisses = 0;
+        hits = 0;
 
     }
 
@@ -80,7 +88,7 @@ public class Memory2 {
         int tag = addr / (sets * words);   // shift over to get tag
 
         for (int i = set*ways; i < set*ways + ways; i++) {
-            if (valid[i] && tags[i] == tag)
+            if (valid[i] && tags[i] == tag) 
                 return i;
         }
         return -1;
@@ -108,14 +116,21 @@ public class Memory2 {
         // tag * (set+offset bits) + 
         if (valid[spot]) {
             if (dirty[spot]) {
+                //System.out.println("evicting");
+                //System.out.println(mem[spot][0] + " " + mem[spot][1]);
+
+                int[] newLine = new int[words];
+                for (int j =0; j < words; j++)
+                    newLine[j] = mem[spot][j];
+
+                conMisses++;
                 int eAddr = (tags[spot]*(sets) + (spot/ways)) * words;
                 for (int i = 0; i <= next.getCycles(); i++) 
-                    next.access(eAddr, mem[spot], stage, false);
+                    next.access(eAddr, newLine, stage, false);
             }
             //else  
             //  prio = ways; 
-        
-        }
+        } else {coldMisses++;}
 
          
         Data nextLevel = next.access(addr, new int[0] , stage, true);
@@ -139,7 +154,7 @@ public class Memory2 {
                 Data s = bringIntoCache(addr);
                 if (!s.done) return wait;
                 spot = s.data[0];
-            }
+            } else {hits++;}
         }
 
         int[] spotArr = {spot};
@@ -158,12 +173,13 @@ public class Memory2 {
     }
 
     private Data write(int addr, int[] data) {
+        
         Data s = getSpot(addr);
         if (!s.done) return wait;
 
         int spot = s.data[0];
         if (level == 1) {
-            mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
+            mem[spot][addr%words] = data[addr%words]; // if it's L1, data will be array with changed word only 
         } else {
             mem[spot] = data;
         }
@@ -177,7 +193,7 @@ public class Memory2 {
         for (int i = 0; i < lines; i++) {
             if (level != 0) System.out.print("tag: " + tags[i] + "    ");
             for (int j = 0; j < words; j++) {
-                System.out.print(mem[i][j] + " ");
+                System.out.print((level == 0 ? words * i + j : (i/ways) * words + tags[i]*sets*words + j) + ": " + mem[i][j] + "      ");
             }
             if (level != 0) System.out.print("   v: " + valid[i] + (valid[i]?" ":"") + " d: " + dirty[i] + (dirty[i]?" ":"") + " priority: " + priorities[i]);
             
@@ -242,31 +258,37 @@ public class Memory2 {
                 clock = cycles;
                 return done;
             }
+            
         }
         
         return wait;
     }
 
+    public int getCold() {return coldMisses;}
+    public int getCon() {return conMisses;}
+    public int getHits() {return hits;}
 
     public static void main(String[] args) {
         Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null); 
-        int[] line = {1, 1};
-        //int[] line2 = {0, 1};
-        //int[] line3 = {1, 0};
-        for (int i = 0; i < 5; i++) {
-            //DRAM.access(0, line, 0, false);
-        }
+        int[] line2 = {2, 3};
+        int[] line = {0, 1};
+        int[] line3 = {4, 5};
+        //for (int i = 0; i < 5; i++) {
+            //DRAM.access(0, line, 0, false);}
 
         Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
         Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
         
-        while (!(L1.access(8, line, 0, false)).done) {
-             
-        }
+        //while (!(L1.access(0, line, 0, false)).done) {}
 
-        while (!(L1.access(8, line, 0, true)).done) {
-        }
+        while (!(L1.access(0, line, 0, false)).done) {}
+        while (!(L1.access(1, line, 0, false)).done) {}
+        while (!(L1.access(2, line2, 0, false)).done) {}
+        while (!(L1.access(3, line2, 0, false)).done) {}
+        while (!(L1.access(4, line3, 0, false)).done) {}
+        while (!(L1.access(5, line3, 0, false)).done) {}
         
+
         System.out.println("DRAM: ");
         DRAM.display();
 
