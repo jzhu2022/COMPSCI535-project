@@ -179,7 +179,7 @@ public class Memory2 {
 
         int spot = s.data[0];
         if (level == 1) {
-            mem[spot][addr%words] = data[addr%words]; // if it's L1, data will be array with changed word only 
+            mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
         } else {
             mem[spot] = data;
         }
@@ -288,6 +288,13 @@ public class Memory2 {
         while (!(L1.access(4, line3, 0, false)).done) {}
         while (!(L1.access(5, line3, 0, false)).done) {}
         
+        /*
+         0: 3    1: 6
+         2: 5    3: 0
+         4: 1    5: 0
+         6: 3    7: 0
+         8: 1    9: 0
+         */
 
         System.out.println("DRAM: ");
         DRAM.display();
