@@ -181,7 +181,9 @@ public class Memory2 {
         if (level == 1) {
             mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
         } else {
-            mem[spot] = data;
+            for (int i = 0; i < words; i++) {
+                mem[spot][i] = data[i];
+            }
         }
 
         updatePriorities(spot, priorities[spot]);
