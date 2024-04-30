@@ -548,7 +548,7 @@ public class Pipeline {
     public static void main(String[] args) {
         Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
         Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
-        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+        Memory2 L1 = new Memory2(20, 1, 2, 2, 1, L2);
 
         Pipeline p = new Pipeline(L1);
 
