@@ -139,6 +139,9 @@ public class Memory2 {
         tags[spot] = tag;
         valid[spot] = true;
         dirty[spot] = false;
+        for (int i = 0; i < words; i++) {
+            mem[spot][i] = nextLevel.data[i];
+        }
 
         int[] spotArr =  {spot};
         done.data = spotArr;
