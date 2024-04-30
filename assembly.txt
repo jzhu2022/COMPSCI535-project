@@ -1,34 +1,8 @@
-mov r10, #2--dimensions of matrix
-mul r11, r10, r10--size of matrix in memory
 mov r0, #0--address
-mov r1, #0--value
-mov r2, #0--count
+mov r1, #10--value
 .setup
 str r1, r0
 add r0, r0, #1
-add r1, r1, #1
-cmp r1, r10
-bl .setup
-mov r1, #0
-add r2, r2, #1
-cmp r2, #2
-bl .setup--2 matrices are created
-mov r0, #0--row
-mov r1, #0--column
-mul r2, r10, r10
-mul r2, r2, #2--address of solution
-mov r3, #0--resulting element
-.outer
-ldr r4, r0--row element
-add r0, r0, #1
-ldr r5, r1--column element
-mul r6, r4, r5--multiple the elements
-add r3, r3, r6--add elements
-str r3, r2--store solution
-mov r3, #0--reset r3
-add r2, r2, #1--increment address to store next element of array
-.inc_column
-add r1, r1, r10
-.inc_row
-add r0, r0, #1
-.inner
+sub r1, r1, #1
+cmp r0, #10
+bl .setup--end setup
