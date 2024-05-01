@@ -97,7 +97,6 @@ public class Memory2 {
     private Data bringIntoCache(int addr) {
         int set = (addr / words) % (sets); 
         int tag = addr / (sets * words);
-        int offset = addr%words;
         
         int spot = -1, prio = -1; 
         for (int i = set*ways; i < set*ways + ways; i++) {
@@ -185,7 +184,7 @@ public class Memory2 {
         if (!s.done) return wait;
 
         int spot = s.data[0];
-        if (level == 1) {
+        if (data.length == 1) {
             mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
         } else {
             for (int i = 0; i < words; i++) {
@@ -196,6 +195,30 @@ public class Memory2 {
         updatePriorities(spot, priorities[spot]);
         dirty[spot] = true;
         return done;
+    }
+
+    public void evictAll() {
+        if (next != null) {
+            for (int i = 0; i < lines; i++) {
+                int[] newLine = new int[words];
+                int[] clearLine = new int[words];
+
+                for (int j = 0; j < words; j++) {
+                    newLine[j] = mem[i][j];
+                    tags[j] = 0;
+                    dirty[j] = false;
+                    valid[j] = false;
+                    priorities[j] = words;
+                    clearLine[j] = 0;
+                }
+                
+                int eAddr = (tags[i]*(sets) + (i/ways)) * words;
+                for (int k = 0; k <= next.getCycles(); k++) 
+                    next.access(eAddr, newLine, stage, false);
+
+                mem[i] = clearLine;
+            }
+        }
     }
 
     public void display() {
@@ -311,14 +334,7 @@ public class Memory2 {
         while (!(L1.access(4, line3, 0, false)).done) {}
         while (!(L1.access(5, line3, 0, false)).done) {}
         
-        /*
-         0: 3    1: 6
-         2: 5    3: 0
-         4: 1    5: 0
-         6: 3    7: 0
-         8: 1    9: 0
-         */
-
+        
         System.out.println("DRAM: ");
         DRAM.display();
 
