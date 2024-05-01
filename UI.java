@@ -4,6 +4,16 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 class UI extends JPanel implements ActionListener {
+	static int useCache = -1;
+    static int usePipeline = -1;
+    static JLabel cacheLabel;
+    static JLabel pipelineLabel;
+    static JComboBox<String> cacheSelect;
+    static JComboBox<String> pipelineSelect;
+    static JButton continueButton;
+    static boolean chosen = false;
+
+
 	static JTextField t;
 	static JTextField cycleCount;
 	static JFrame frame;
@@ -29,10 +39,12 @@ class UI extends JPanel implements ActionListener {
 	public Instruction[] readOut = {new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824)};
 
 
-	public UI(Memory2 memory) {
+	public UI() {
 		super();
+	}
 
-		pipe = new Pipeline(memory);
+	public void setMemory(Memory2 m) {
+		pipe = new Pipeline(m);
 	}
 
 	@Override
@@ -109,7 +121,7 @@ class UI extends JPanel implements ActionListener {
 			// set the text of field to blank
 			//t.setText(" ");
 		} else if (s.equals("cycle") && pipe.notEndOfProgram()) {
-			readOut = pipe.cycle();
+			readOut = usePipeline == 1 ? pipe.cycle() : pipe.cycleNoPipeline();
 			clock++;
 
 			cycleCount.setText("" + clock);
@@ -126,14 +138,36 @@ class UI extends JPanel implements ActionListener {
 			repaint();
 		}
 	}
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
+		cacheLabel = new JLabel("Cache? ");
+        pipelineLabel = new JLabel("Pipeline? ");
+        String[] yesNo = {"", "Yes", "No"}; 
+        cacheSelect = new JComboBox<String>(yesNo);
+        pipelineSelect = new JComboBox<String>(yesNo);
+        cacheSelect.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                useCache = cacheSelect.getSelectedItem().equals("Yes") ? 1 : 0;
+                System.out.println("cache: " + useCache);
+            }
+        });
 
-		Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
-        Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
-        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+        pipelineSelect.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                usePipeline = pipelineSelect.getSelectedItem().equals("Yes") ? 1 : 0;
+            }
+        });
+
+        continueButton = new JButton("Continue");
+        continueButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (useCache != -1 && usePipeline != -1) chosen = true;
+                
+            }
+        });
+
  
 		
-		UI ui = new UI(L1);
+		UI ui = new UI();
 		frame = new JFrame("CS535 Simulator");
 				
 		button = new JButton("submit");
@@ -146,7 +180,30 @@ class UI extends JPanel implements ActionListener {
 
 		cycleCount = new JTextField(16);
 		
-		JPanel p = new JPanel();
+		// JPanel p = new JPanel();
+		ui.add(cacheLabel);
+        ui.add(cacheSelect);
+        ui.add(pipelineLabel);
+        ui.add(pipelineSelect);
+        ui.add(continueButton);
+
+		frame.add(ui);
+		frame.setSize(600, 600);
+		frame.setVisible(true);
+
+		while (!chosen){Thread.sleep(100);}
+
+		ui.remove(cacheLabel);
+		ui.remove(cacheSelect);
+        ui.remove(pipelineLabel);
+        ui.remove(pipelineSelect);
+        ui.remove(continueButton);
+
+		Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
+        Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
+        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+
+		ui.setMemory(useCache == 1 ? L1 : DRAM);
 
 		ui.add(t);
 		ui.add(cycleCount);
@@ -159,11 +216,10 @@ class UI extends JPanel implements ActionListener {
 
 		ui.add(ui.drawRegisters());
 
-		frame.add(ui);
+		
 
 		ui.repaint();
 		
-		frame.setSize(600, 600);
-		frame.setVisible(true);
+		
 	}
 }
