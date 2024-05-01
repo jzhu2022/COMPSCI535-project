@@ -121,11 +121,12 @@ public class Memory2 {
                 //System.out.println(mem[spot][0] + " " + mem[spot][1]);
 
                 int[] newLine = new int[words];
-                if (level == 1) newLine[offset] = mem[spot][0];
-                else {
-                    for (int j = 0; j < words; j++)
+                
+                
+                    for (int j = 0; j < words; j++) {
                         newLine[j] = mem[spot][j];
-                }
+                    }
+                
                 conMisses++;
                 int eAddr = (tags[spot]*(sets) + (spot/ways)) * words;
                 for (int i = 0; i <= next.getCycles(); i++) 
@@ -310,7 +311,13 @@ public class Memory2 {
         while (!(L1.access(4, line3, 0, false)).done) {}
         while (!(L1.access(5, line3, 0, false)).done) {}
         
-
+        /*
+         0: 3    1: 6
+         2: 5    3: 0
+         4: 1    5: 0
+         6: 3    7: 0
+         8: 1    9: 0
+         */
 
         System.out.println("DRAM: ");
         DRAM.display();
