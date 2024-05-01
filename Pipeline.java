@@ -14,7 +14,7 @@ public class Pipeline {
     public int[] registers = new int[16];
     private boolean[] pendingRegisters = new boolean[16];
     
-    private int[] instructionRegisters = new int[36];
+    private int[] instructionRegisters = new int[64];
 
     private Assembler assembler = new Assembler();
 
@@ -548,7 +548,7 @@ public class Pipeline {
     public static void main(String[] args) {
         Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
         Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
-        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+        Memory2 L1 = new Memory2(20, 1, 2, 2, 1, L2);
 
         Pipeline p = new Pipeline(L1);
 
@@ -566,13 +566,13 @@ public class Pipeline {
             System.out.println("Memory:    " + Integer.toBinaryString(p.inFlightInstructions[3].instruction) + " - " + p.inFlightInstructions[3].instruction + " - " + p.inFlightInstructions[3].cond);
             System.out.println("Writeback: " + Integer.toBinaryString(cheat.instruction)  + " - " + cheat.instruction + " - " + cheat.cond);
             System.out.println("Registers: " + p.registers[0] + ", " + p.registers[1] + ", " + p.registers[2] + ", " + p.registers[3] + ", " + p.registers[4] + ", " + p.registers[5] + "\n\n");
-            */
-            System.out.println("L1:");
-            L1.display();
             System.out.println("L2:");
             L2.display();
             System.out.println("DRAM:");
             DRAM.display();
+            */
+            System.out.println("L1:");
+            L1.display();
         }
     }
 }
