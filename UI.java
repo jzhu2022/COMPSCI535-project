@@ -5,10 +5,10 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 class UI extends JPanel implements ActionListener {
 	static JTextField t;
+	static JTextField cycleCount;
 	static JFrame frame;
 	static JButton button;
 	static JButton cycleButton;
-	static JLabel label;
 
 	static DefaultTableModel memTableModel;
 	static DefaultTableModel regTableModel;
@@ -86,12 +86,15 @@ class UI extends JPanel implements ActionListener {
 		String s = e.getActionCommand();
 		if (s.equals("submit")) {
 			// set the text of the label to the text of the field
-			label.setText(t.getText());
+			//label.setText(t.getText());
 
-			// set the text of field to blank
-			t.setText(" ");
-		} else if (s.equals("cycle") && pipe.notEndOfProgram()) {
-			readOut = pipe.cycleNoPipeline();
+			for (int i = 0; i < Integer.valueOf(t.getText()); i++) {
+				readOut = pipe.cycle();
+				clock++;	
+			}
+
+			cycleCount.setText("" + clock);
+
 
 			regTableModel.fireTableDataChanged();
 			remove(reg);
@@ -101,11 +104,25 @@ class UI extends JPanel implements ActionListener {
 			remove(mem);
 			add(drawMemory(pipe.memory, 0, 1));
 
+			repaint();
 
-			//memTableModel.fireTableDataChanged();
-			//remove(mem);
-			//cannot redraw memory without reference
-			//add(drawMemory());
+			// set the text of field to blank
+			//t.setText(" ");
+		} else if (s.equals("cycle") && pipe.notEndOfProgram()) {
+			readOut = pipe.cycle();
+			clock++;
+
+			cycleCount.setText("" + clock);
+
+
+			regTableModel.fireTableDataChanged();
+			remove(reg);
+			add(drawRegisters());
+
+			memTableModel.fireTableDataChanged();
+			remove(mem);
+			add(drawMemory(pipe.memory, 0, 1));
+
 			repaint();
 		}
 	}
@@ -118,9 +135,7 @@ class UI extends JPanel implements ActionListener {
 		
 		UI ui = new UI(L1);
 		frame = new JFrame("CS535 Simulator");
-		
-		label = new JLabel("nothing entered");
-		
+				
 		button = new JButton("submit");
 		cycleButton = new JButton("cycle");
 		
@@ -128,14 +143,17 @@ class UI extends JPanel implements ActionListener {
 		cycleButton.addActionListener(ui);
 
 		t = new JTextField(16);
+
+		cycleCount = new JTextField(16);
 		
 		JPanel p = new JPanel();
 
 		ui.add(t);
+		ui.add(cycleCount);
 		ui.add(button);
 		ui.add(cycleButton);
-		ui.add(label);
 
+		
 
 		ui.add(ui.drawMemory(L1, 0, 1));
 
