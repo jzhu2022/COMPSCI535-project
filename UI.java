@@ -251,8 +251,8 @@ class UI extends JPanel implements ActionListener {
         ui.remove(continueButton);
 
 
-		DRAM = new Memory2(DRAMSize, 5, wordsPerLine, -1, 0, null);
-        L2 = new Memory2(L2Size, 3, wordsPerLine, 2, 2, DRAM);
+		DRAM = new Memory2(DRAMSize, 10, wordsPerLine, -1, 0, null);
+        L2 = new Memory2(L2Size, 5, wordsPerLine, 2, 2, DRAM);
         L1 = new Memory2(L1Size, 1, wordsPerLine, 2, 1, L2);
 
 		ui.setMemory(useCache == 1 ? L1 : DRAM);
