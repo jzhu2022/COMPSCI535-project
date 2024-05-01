@@ -173,8 +173,10 @@ public class Memory2 {
         if (!s.done) return wait;
 
         int spot = s.data[0];
-        updatePriorities(spot, priorities[spot]);
-        done.data = mem[spot];
+        if (spot < mem.length) {
+            updatePriorities(spot, priorities[spot]);
+            done.data = mem[spot];
+        }
         return done;
     }
 
@@ -185,15 +187,18 @@ public class Memory2 {
 
         int spot = s.data[0];
         if (data.length == 1) {
-            mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
+            if (spot < mem.length)
+                mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
         } else {
             for (int i = 0; i < words; i++) {
                 mem[spot][i] = data[i];
             }
         }
 
-        updatePriorities(spot, priorities[spot]);
-        dirty[spot] = true;
+        if (spot < mem.length) {
+            updatePriorities(spot, priorities[spot]);
+            dirty[spot] = true;
+        }
         return done;
     }
 
@@ -334,7 +339,14 @@ public class Memory2 {
         while (!(L1.access(4, line3, 0, false)).done) {}
         while (!(L1.access(5, line3, 0, false)).done) {}
         
-        
+        /*
+         0: 3    1: 6
+         2: 5    3: 0
+         4: 1    5: 0
+         6: 3    7: 0
+         8: 1    9: 0
+         */
+
         System.out.println("DRAM: ");
         DRAM.display();
 
