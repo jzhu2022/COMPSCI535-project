@@ -100,9 +100,9 @@ class UI extends JPanel implements ActionListener {
 			// set the text of the label to the text of the field
 			//label.setText(t.getText());
 
-			for (int i = 0; i < Integer.valueOf(t.getText()); i++) {
-				readOut = pipe.cycle();
-				clock++;	
+			for (int i = 0; i < Integer.valueOf(t.getText()) && pipe.notEndOfProgram(); i++) {
+				readOut = usePipeline == 1 ? pipe.cycle() : pipe.cycleNoPipeline();
+				clock++;
 			}
 
 			cycleCount.setText("" + clock);

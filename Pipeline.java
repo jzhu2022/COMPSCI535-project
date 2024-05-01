@@ -59,7 +59,7 @@ public class Pipeline {
     public void fillPipeline() {
         for (int i = 0; i < inFlightInstructions.length; i++) {
             inFlightInstructions[i] = new Instruction(0);//initialize instructions in pipeline
-            inFlightInstructions[i].type = 5;
+            inFlightInstructions[i].type = 6;
         }
     }
 
@@ -483,7 +483,7 @@ public class Pipeline {
     }
 
     public boolean notEndOfProgram() {
-        return inFlightInstructions[0].instruction != -201326592 || inFlightInstructions[1].instruction != -201326592 || inFlightInstructions[2].instruction != -201326592 || inFlightInstructions[3].instruction != -201326592;
+        return !(currentInstructionIndex > 63) && (inFlightInstructions[0].instruction != -201326592 || inFlightInstructions[1].instruction != -201326592 || inFlightInstructions[2].instruction != -201326592 || inFlightInstructions[3].instruction != -201326592);
     }
 
     public Instruction[] cycle() {
@@ -558,7 +558,7 @@ public class Pipeline {
         while(p.notEndOfProgram()) {
         //for (int i = 0; i < 600; i++) {
             Instruction cheat = p.inFlightInstructions[3];
-            p.cycle();
+            p.cycleNoPipeline();
             /*
             System.out.println("fetching:  " + Integer.toBinaryString(p.inFlightInstructions[0].instruction) + " - " + p.inFlightInstructions[0].instruction + " - " + p.inFlightInstructions[0].cond);
             System.out.println("decoding:  " + Integer.toBinaryString(p.inFlightInstructions[1].instruction) + " - " + p.inFlightInstructions[1].instruction + " - " + p.inFlightInstructions[1].cond);
