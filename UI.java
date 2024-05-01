@@ -113,7 +113,7 @@ class UI extends JPanel implements ActionListener {
 			DRAMText.setText(DRAM.toString());
 			if (useCache == 1) {
 				L1Text.setText(L1.toString());
-				L2Text.setText(L1.toString());
+				L2Text.setText(L2.toString());
 			}
 
 			updatePipeline();
