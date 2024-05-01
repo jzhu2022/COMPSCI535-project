@@ -13,6 +13,9 @@ class UI extends JPanel implements ActionListener {
     static JButton continueButton;
     static boolean chosen = false;
 
+	static JTextArea DRAMText, L2Text, L1Text;
+    static JTextArea pipeText;
+	static JTextArea registerText;
 
 	static JTextField t;
 	static JTextField cycleCount;
@@ -26,15 +29,16 @@ class UI extends JPanel implements ActionListener {
 	static JTable mem;
 	static JTable reg;
 
+	static int DRAMSize = 16, L2Size = 8, L1Size = 4;
+	static int wordsPerLine = 2;
+
+
 	static int clock; // change type to Clock
-	static int pipeline; // change type to Pipeline
-	private int boxWidth = 300;//70
-	private int boxSpace = 30;
-	private int initX = 50;
-	private int initY = 50;
-	private final String[] STAGE_NAMES = {"Fetch", "Decode", "Execute", "Memory", "Writeback"};
+	static final String[] STAGE_NAMES = {"Fetch", "Decode", "Execute", "Memory", "Writeback"};
+	static final String[] REGISTER_NAMES = {"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "PS", "PC"};
 
 
+	static Memory2 DRAM, L1, L2;
 	private Pipeline pipe;
 	public Instruction[] readOut = {new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824), new Instruction(-1073741824)};
 
@@ -50,46 +54,45 @@ class UI extends JPanel implements ActionListener {
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		drawPipeline(g);
+		//drawPipeline(g);
 	}
 
-	private void drawPipeline(Graphics g) {
-		int y = getHeight() - initY - boxWidth;
-		String[] instructions = {Integer.toBinaryString(readOut[0].instruction), Integer.toBinaryString(readOut[1].instruction), Integer.toBinaryString(readOut[2].instruction), Integer.toBinaryString(readOut[3].instruction), Integer.toBinaryString(readOut[4].instruction)}; // placeholder, get values from pipeline
-		for (int i = 0; i < 5; i++ ){
-			g.drawRect(initX + i*(boxWidth+boxSpace), y, boxWidth, boxWidth);
-			if (i != 4) g.drawLine(initX + boxWidth + i*(boxWidth+boxSpace), y + boxWidth/2,initX + boxWidth + i*(boxWidth+boxSpace)+boxSpace, y + boxWidth/2);
-			g.drawString(STAGE_NAMES[i], initX + i*(boxWidth+boxSpace) + (-3*STAGE_NAMES[i].length() + 35), y+boxWidth+15);
-			g.drawString(instructions[i], initX + i*(boxWidth+boxSpace) + (-3*STAGE_NAMES[i].length() + 40), y+boxWidth/2);
+	private void updatePipeline() {
+		/*
+		String[] instructions = {Integer.toBinaryString(readOut[0].instruction), 
+								 Integer.toBinaryString(readOut[1].instruction), 
+								 Integer.toBinaryString(readOut[2].instruction), 
+								 Integer.toBinaryString(readOut[3].instruction), 
+								 Integer.toBinaryString(readOut[4].instruction)}; // placeholder, get values from pipeline
+		*/
+		String str = "";
+		for (int i = 0; i < 5; i++ ) {
+			str += STAGE_NAMES[i] + ": " + Integer.toBinaryString(readOut[i] == null ? 0 : readOut[i].instruction) + "\n";
 		}
+		pipeText.setText(str);
 		
 	}
 
-	private JTable drawMemory(Memory2 m, int start, int end) {
-		Integer[] a = new Integer[m.getWords()];
+	private void updateMemory(Memory2 m, int start, int end) { // change to update text areas
+		Integer[] a = new Integer[m.getWords()]; 
 		for (int i = 0; i < a.length; i++) {
 			a[i] = i;
 		}
 
 		memTableModel = new DefaultTableModel(m.displayPart(start, end), a);
 		mem = new JTable(memTableModel);
-
-		return mem;
 	}
 
-	private JTable drawRegisters() {
-		String[] columnNames = {"Register Addr", "Data"};
+	private void updateRegisters() {
 
-		Integer[][] data = new Integer[pipe.registers.length][2];
+		String str = "";
 
 		for (int i = 0; i < pipe.registers.length; i++) {
-			data[i][0] = i;
-			data[i][1] = pipe.registers[i];
+
+			str += " " + REGISTER_NAMES[i] + ": " + pipe.registers[i] + "\n";
 		}
 
-		regTableModel = new DefaultTableModel(data, columnNames);
-		reg = new JTable(regTableModel);
-		return reg;
+		registerText.setText(str);		
 	}
 
 	// if the button is pressed
@@ -107,16 +110,22 @@ class UI extends JPanel implements ActionListener {
 
 			cycleCount.setText("" + clock);
 
+			DRAMText.setText(DRAM.toString());
+			if (useCache == 1) {
+				L1Text.setText(L1.toString());
+				L2Text.setText(L1.toString());
+			}
 
-			regTableModel.fireTableDataChanged();
-			remove(reg);
-			add(drawRegisters());
+			updatePipeline();
+			updateRegisters();
+			//regTableModel.fireTableDataChanged();
+			//remove(reg);
+			//add(drawRegisters());
 
-			memTableModel.fireTableDataChanged();
-			remove(mem);
-			add(drawMemory(pipe.memory, 0, 1));
+			//memTableModel.fireTableDataChanged();
+			//remove(mem);
+			//add(drawMemory(pipe.memory, 0, 1));
 
-			repaint();
 
 			// set the text of field to blank
 			//t.setText(" ");
@@ -127,15 +136,21 @@ class UI extends JPanel implements ActionListener {
 			cycleCount.setText("" + clock);
 
 
-			regTableModel.fireTableDataChanged();
-			remove(reg);
-			add(drawRegisters());
+			//regTableModel.fireTableDataChanged();
+			//remove(reg);
+			//add(drawRegisters());
 
-			memTableModel.fireTableDataChanged();
-			remove(mem);
-			add(drawMemory(pipe.memory, 0, 1));
+			//memTableModel.fireTableDataChanged();
+			//remove(mem);
+			//add(drawMemory(pipe.memory, 0, 1));
 
-			repaint();
+			DRAMText.setText(DRAM.toString());
+			if (useCache == 1) {
+				L1Text.setText(L1.toString());
+				L2Text.setText(L1.toString());
+			}
+			updatePipeline();
+			updateRegisters();
 		}
 	}
 	public static void main(String[] args) throws Exception {
@@ -147,7 +162,6 @@ class UI extends JPanel implements ActionListener {
         cacheSelect.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 useCache = cacheSelect.getSelectedItem().equals("Yes") ? 1 : 0;
-                System.out.println("cache: " + useCache);
             }
         });
 
@@ -169,6 +183,7 @@ class UI extends JPanel implements ActionListener {
 		
 		UI ui = new UI();
 		frame = new JFrame("CS535 Simulator");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				
 		button = new JButton("submit");
 		cycleButton = new JButton("cycle");
@@ -199,19 +214,95 @@ class UI extends JPanel implements ActionListener {
         ui.remove(pipelineSelect);
         ui.remove(continueButton);
 
-		Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
-        Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
-        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
+
+		DRAM = new Memory2(DRAMSize, 5, wordsPerLine, -1, 0, null);
+        L2 = new Memory2(L2Size, 3, wordsPerLine, 2, 2, DRAM);
+        L1 = new Memory2(L1Size, 1, wordsPerLine, 2, 1, L2);
 
 		ui.setMemory(useCache == 1 ? L1 : DRAM);
 
-		ui.add(t);
-		ui.add(cycleCount);
-		ui.add(button);
-		ui.add(cycleButton);
+		
+
+		JPanel left = new JPanel();
+        JPanel topRight = new JPanel();
+        JPanel bottomRight = new JPanel();
 
 		
 
+		bottomRight.add(t);
+		bottomRight.add(cycleCount);
+		bottomRight.add(button);
+		bottomRight.add(cycleButton);
+
+		
+
+		left.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+		GridLayout leftLayout = new GridLayout(useCache==1 ? 4: 2, 1, 10, 10);
+        
+		left.setLayout(leftLayout);
+
+
+		JPanel registerPanel = new JPanel();
+		registerPanel.setLayout(new BorderLayout());
+
+		registerText = new JTextArea();
+		registerText.setEditable(false);
+		ui.updateRegisters();
+		registerPanel.add(new JLabel("Registers"), BorderLayout.PAGE_START);
+		registerPanel.add(new JScrollPane(registerText), BorderLayout.CENTER);
+		left.add(registerPanel);
+
+        DRAMText = new JTextArea(DRAM.toString());
+		DRAMText.setEditable(false);
+		JPanel DRAMPanel = new JPanel();
+		DRAMPanel.setLayout(new BorderLayout());
+		DRAMPanel.add(new JLabel("DRAM"), BorderLayout.PAGE_START);
+		DRAMPanel.add(new JScrollPane(DRAMText), BorderLayout.CENTER);
+		if (useCache == 1) {
+			L2Text = new JTextArea(L2.toString());
+			L1Text = new JTextArea(L1.toString());
+			L2Text.setEditable(false);
+			L1Text.setEditable(false);
+			JPanel L1Panel = new JPanel();
+			L1Panel.setLayout(new BorderLayout());
+			L1Panel.add(new JLabel("L1 Cache"), BorderLayout.PAGE_START);
+			L1Panel.add(new JScrollPane(L1Text), BorderLayout.CENTER);
+
+			JPanel L2Panel = new JPanel();
+			L2Panel.setLayout(new BorderLayout());
+			L2Panel.add(new JLabel("L2 Cache"), BorderLayout.PAGE_START);
+			L2Panel.add(new JScrollPane(L2Text), BorderLayout.CENTER);
+			left.add(L1Panel);
+			left.add(L2Panel);
+        }
+		
+		
+		left.add(DRAMPanel);
+
+
+
+
+		topRight.setLayout(new BorderLayout());
+
+		pipeText = new JTextArea();
+		pipeText.setEditable(false);
+		ui.updatePipeline();
+		topRight.add(new JLabel("Pipeline"), BorderLayout.PAGE_START);
+		topRight.add(pipeText, BorderLayout.CENTER);
+
+
+		
+
+
+		JSplitPane right = new JSplitPane(SwingConstants.HORIZONTAL, topRight, bottomRight);
+		JSplitPane whole = new JSplitPane(SwingConstants.VERTICAL, left, right);
+
+		frame.remove(ui);
+		frame.add(whole);
+		frame.revalidate();
+
+		/*
 		ui.add(ui.drawMemory(L1, 0, 1));
 
 		ui.add(ui.drawRegisters());
@@ -219,7 +310,7 @@ class UI extends JPanel implements ActionListener {
 		
 
 		ui.repaint();
-		
+		*/
 		
 	}
 }

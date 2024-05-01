@@ -206,6 +206,20 @@ public class Memory2 {
         }
     }
 
+    public String toString() {
+        String str = "";
+        for (int i = 0; i < lines; i++) {
+            if (level != 0) str += "tag: " + tags[i] + "    ";
+            for (int j = 0; j < words; j++) {
+                str += (level == 0 ? words * i + j : (i/ways) * words + tags[i]*sets*words + j) + ": " + mem[i][j] + "      ";
+            }
+            if (level != 0) str += "   v: " + valid[i] + (valid[i]?" ":"") + " d: " + dirty[i] + (dirty[i]?" ":"") + " priority: " + priorities[i];
+            
+            str += "\n";
+        }
+        return str;
+    }
+
     public Integer[][] displayPart(int start, int end) {
         
         Integer[][] part = new Integer[end - start+1][words];
