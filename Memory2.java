@@ -185,7 +185,7 @@ public class Memory2 {
         if (!s.done) return wait;
 
         int spot = s.data[0];
-        if (data.length == 1) {
+        if (level == 1) {
             mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
         } else {
             for (int i = 0; i < words; i++) {
