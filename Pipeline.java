@@ -544,11 +544,10 @@ public class Pipeline {
         return readOut;
     }
 
-
     public static void main(String[] args) {
         Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null);
         Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
-        Memory2 L1 = new Memory2(20, 1, 2, 2, 1, L2);
+        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
 
         Pipeline p = new Pipeline(L1);
 
@@ -558,7 +557,7 @@ public class Pipeline {
         while(p.notEndOfProgram()) {
         //for (int i = 0; i < 600; i++) {
             Instruction cheat = p.inFlightInstructions[3];
-            p.cycleNoPipeline();
+            p.cycle();
             /*
             System.out.println("fetching:  " + Integer.toBinaryString(p.inFlightInstructions[0].instruction) + " - " + p.inFlightInstructions[0].instruction + " - " + p.inFlightInstructions[0].cond);
             System.out.println("decoding:  " + Integer.toBinaryString(p.inFlightInstructions[1].instruction) + " - " + p.inFlightInstructions[1].instruction + " - " + p.inFlightInstructions[1].cond);

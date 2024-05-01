@@ -599,9 +599,4 @@ public class Assembler {
 
         return instruction;
     }
-
-    public static void main(String[] args) {
-        Assembler assembler = new Assembler();
-        assembler.assemble();
-    }
 }
