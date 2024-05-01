@@ -16,12 +16,15 @@ class UI extends JPanel implements ActionListener {
 	static JTextArea DRAMText, L2Text, L1Text;
     static JTextArea pipeText;
 	static JTextArea registerText;
+	static JLabel time;
 
 	static JTextField t;
 	static JTextField cycleCount;
 	static JFrame frame;
 	static JButton button;
 	static JButton cycleButton;
+	static JButton flushButton;
+	static JButton runButton;
 
 	static DefaultTableModel memTableModel;
 	static DefaultTableModel regTableModel;
@@ -99,13 +102,13 @@ class UI extends JPanel implements ActionListener {
 	public void actionPerformed(ActionEvent e) 
 	{
 		String s = e.getActionCommand();
-		if (s.equals("submit")) {
+		if (s.equals("Submit")) {
 			// set the text of the label to the text of the field
 			//label.setText(t.getText());
 
-			for (int i = 0; i < Integer.valueOf(t.getText()) && pipe.notEndOfProgram(); i++) {
+			for (int i = 0; i < Integer.valueOf(t.getText()); i++) {
 				readOut = usePipeline == 1 ? pipe.cycle() : pipe.cycleNoPipeline();
-				clock++;
+				clock++;	
 			}
 
 			cycleCount.setText("" + clock);
@@ -129,7 +132,7 @@ class UI extends JPanel implements ActionListener {
 
 			// set the text of field to blank
 			//t.setText(" ");
-		} else if (s.equals("cycle") && pipe.notEndOfProgram()) {
+		} else if (s.equals("Cycle") && pipe.notEndOfProgram()) {
 			readOut = usePipeline == 1 ? pipe.cycle() : pipe.cycleNoPipeline();
 			clock++;
 
@@ -147,10 +150,38 @@ class UI extends JPanel implements ActionListener {
 			DRAMText.setText(DRAM.toString());
 			if (useCache == 1) {
 				L1Text.setText(L1.toString());
-				L2Text.setText(L1.toString());
+				L2Text.setText(L2.toString());
 			}
 			updatePipeline();
 			updateRegisters();
+		} else if (s.equals("Flush Cache")) {
+			if (useCache == 1) {
+				L1.evictAll();
+				L2.evictAll();
+				DRAMText.setText(DRAM.toString());
+				L1Text.setText(L1.toString());
+				L2Text.setText(L2.toString());
+
+			}
+		} else if (s.equals("Run")) {
+			long start = System.currentTimeMillis();
+			while (pipe.notEndOfProgram()) {
+				if (usePipeline == 1)  pipe.cycle();
+				else pipe.cycleNoPipeline();
+			}
+			DRAMText.setText(DRAM.toString());
+			if (useCache == 1) {
+				L1Text.setText(L1.toString());
+				L2Text.setText(L2.toString());
+			}
+			updatePipeline();
+			updateRegisters();
+			long end = System.currentTimeMillis();
+
+			long runTime = (end-start);
+			time.setText("Run Time: " + runTime);
+
+
 		}
 	}
 	public static void main(String[] args) throws Exception {
@@ -185,11 +216,16 @@ class UI extends JPanel implements ActionListener {
 		frame = new JFrame("CS535 Simulator");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				
-		button = new JButton("submit");
-		cycleButton = new JButton("cycle");
+		button = new JButton("Submit");
+		cycleButton = new JButton("Cycle");
+		flushButton = new JButton("Flush Cache");
+		runButton = new JButton("Run");
 		
 		button.addActionListener(ui);
 		cycleButton.addActionListener(ui);
+		flushButton.addActionListener(ui);
+		runButton.addActionListener(ui);
+		time = new JLabel();
 
 		t = new JTextField(16);
 
@@ -233,6 +269,10 @@ class UI extends JPanel implements ActionListener {
 		bottomRight.add(cycleCount);
 		bottomRight.add(button);
 		bottomRight.add(cycleButton);
+		if (useCache == 1) bottomRight.add(flushButton);
+		bottomRight.add(runButton);
+		bottomRight.add(time);
+		
 
 		
 
