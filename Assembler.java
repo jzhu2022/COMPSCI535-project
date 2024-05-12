@@ -6,17 +6,16 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-//create hash map of labels(assembly lines that begin with a '.'): label:line #
-//whenever a label is used reference that line #
+//create hash map of labels(assembly lines that begin with a '.') format: label:line#
 public class Assembler {
-    private Dictionary<String, Integer> symbols = new Hashtable<>();
+    private Dictionary<String, Integer> symbols = new Hashtable<>();//dictionary of symbols and their corresponding line#
     private int currentLine;
 
     public Assembler() {
         symbols = new Hashtable<>();
         currentLine = 0;
     }
-
+    //builds table of symbols, first passthrough of program
     public void buildSymbolTable() {
         BufferedReader reader;
         try {
@@ -31,8 +30,8 @@ public class Assembler {
                 //check if label
                 if (line.charAt(0) == '.') {
                     symbols.put(line, currentLine);
+                    //labels will not be counted as instructions, we do not want branches to branch back to were the assembler thinks a label is thus currentLine is not incremented
                 } else {
-                    //labels will not be counted as instructions, we do not want branches to branch back to were the assembler thinks a label is
                     currentLine++;
                 }
                 line = reader.readLine();
@@ -43,7 +42,7 @@ public class Assembler {
             e.printStackTrace();
         }
     }
-
+    //uses symbol table and turns assembly to machine code
     public void assemble() {
         buildSymbolTable();
 
@@ -79,13 +78,14 @@ public class Assembler {
 		}
     }
 
-
+    //function to interpret a line in assembly and return a line of machine code
     public int interpretAssemblyLine(String line) {
         //labels do not have operands
         if (line.charAt(0) == '.') {
             return 0;
         }
 
+        //parse line of assembly
         String mnemonic;
         String [] operands;
         if (line.indexOf(" ") != -1) {
@@ -96,6 +96,7 @@ public class Assembler {
             operands = null;
         }
 
+        //return value
         int instruction = 0;
         //condition code
         int condition = 7;

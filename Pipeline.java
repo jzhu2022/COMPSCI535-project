@@ -5,7 +5,7 @@ import java.util.*;
 
 public class Pipeline {
     private Stack<Integer> stack = new Stack();//stack stores program counter
-    private Instruction[] inFlightInstructions = new Instruction[4];
+    private Instruction[] inFlightInstructions = new Instruction[4];//instructions in the pipeline
 
     public Memory2 memory;
         
@@ -29,13 +29,13 @@ public class Pipeline {
         fillPipeline();
     }
 
+    //fills instruction registers with machine code instructions
     public void fillInstructionCache() {
         //halt instruction signifies end of program
         int iHALT = -201326592;
         for (int i = 0; i < instructionRegisters.length; i++) {
             instructionRegisters[i] = iHALT;
         }
-        //fills instruction registers with machine code instructions
         BufferedReader reader;
 		try {
 			reader = new BufferedReader(new FileReader("program.txt"));
@@ -52,14 +52,15 @@ public class Pipeline {
 			e.printStackTrace();
 		}
     }
-    
+
+    //initially fills the pipeline with stall instructions
     public void fillPipeline() {
         for (int i = 0; i < inFlightInstructions.length; i++) {
             inFlightInstructions[i] = new Instruction(0);//initialize instructions in pipeline
             inFlightInstructions[i].type = 6;
         }
     }
-
+    //sets the conddition code of all instructions so that they're squashed
     private void squashPipeline() {
         for (int i = 0; i < inFlightInstructions.length; i++) {
             inFlightInstructions[i].cond = 6;//squash instructions in pipeline
@@ -72,10 +73,12 @@ public class Pipeline {
         return i;
     }
 
+    //fetches instruction according to value in the PC register
     private Instruction fetch() {
         return new Instruction(instructionRegisters[registers[15]++]);
     }
 
+    //decode function decodes an instruction
     private Instruction decode(Instruction i) {
         if (i.cond == 6 || i.cond == 5) {
             return i;
@@ -403,7 +406,6 @@ public class Pipeline {
                 else {
                     d = memory.getNewLine(i.result);
                     
-                    
                     d[i.result%memory.getWords()] = registers[i.destination];
                     
                 }
@@ -539,38 +541,5 @@ public class Pipeline {
         }
 
         return readOut;
-    }
-
-    public static void main(String[] args) {
-        Memory2 DRAM = new Memory2(100, 100, 2, -1, 0, null);
-        Memory2 L2 = new Memory2(16, 5, 2, 2, 2, DRAM);
-        Memory2 L1 = new Memory2(8, 1, 2, 2, 1, L2);
-
-        Pipeline p = new Pipeline(L1);
-
-        int cycles = 0;
-
-        while(p.notEndOfProgram()) {
-        //for (int i = 0; i < 600; i++) {
-            Instruction cheat = p.inFlightInstructions[3];
-            p.cycle();
-            cycles++;
-            /*
-            System.out.println("fetching:  " + Integer.toBinaryString(p.inFlightInstructions[0].instruction) + " - " + p.inFlightInstructions[0].instruction);
-            System.out.println("decoding:  " + Integer.toBinaryString(p.inFlightInstructions[1].instruction) + " - " + p.inFlightInstructions[1].instruction);
-            System.out.println("executing: " + Integer.toBinaryString(p.inFlightInstructions[2].instruction) + " - " + p.inFlightInstructions[2].instruction);
-            System.out.println("Memory:    " + Integer.toBinaryString(p.inFlightInstructions[3].instruction) + " - " + p.inFlightInstructions[3].instruction);
-            System.out.println("Writeback: " + Integer.toBinaryString(cheat.instruction)  + " - " + cheat.instruction + " - " + cheat.cond);
-            System.out.println("Registers: " + p.registers[0] + ", " + p.registers[1] + ", " + p.registers[2] + ", " + p.registers[3] + ", " + p.registers[4] + ", " + p.registers[5] + "\n\n");
-            
-            System.out.println("L1:");
-            L1.display();
-            System.out.println("L2:");
-            L2.display();
-            System.out.println("DRAM:");
-            DRAM.display();
-            */
-        }
-        System.out.println(cycles);
     }
 }

@@ -348,46 +348,4 @@ public class Memory2 {
     public int getCold() {return coldMisses;}
     public int getCon() {return conMisses;}
     public int getHits() {return hits;}
-
-    public static void main(String[] args) {
-        Memory2 DRAM = new Memory2(16, 5, 2, -1, 0, null); 
-        int[] line2 = {2, 3};
-        int[] line = {0, 1};
-        int[] line3 = {4, 5};
-        int[] line4 = {6, 7};
-        //for (int i = 0; i < 5; i++) {
-            //DRAM.access(0, line, 0, false);}
-
-        Memory2 L2 = new Memory2(8, 3, 2, 2, 2, DRAM);
-        Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
-        
-        //while (!(L1.access(0, line, 0, false)).done) {}
-
-        while (!(L1.access(0, line, 0, false)).done) {}
-        while (!(L1.access(1, line, 0, false)).done) {}
-        while (!(L1.access(2, line2, 0, false)).done) {}
-        while (!(L1.access(3, line2, 0, false)).done) {}
-        while (!(L1.access(4, line3, 0, false)).done) {}
-        while (!(L1.access(5, line3, 0, false)).done) {}
-        while (!(L1.access(6, line4, 0, false)).done) {}
-        while (!(L1.access(7, line4, 0, false)).done) {}
-        
-        /*
-         0: 3    1: 6
-         2: 5    3: 0
-         4: 1    5: 0
-         6: 3    7: 0
-         8: 1    9: 0
-         */
-
-        System.out.println("DRAM: ");
-        DRAM.display();
-
-        System.out.println("L2: ");
-        L2.display();
-
-        System.out.println("L1: ");
-        L1.display();
-        
-    }
 }

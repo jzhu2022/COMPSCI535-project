@@ -1,35 +1,8 @@
 mov r0, #0--address
-mov r1, #1000--value, initialized to length of array
+mov r1, #10--value
 .setup
 str r1, r0
 add r0, r0, #1
 sub r1, r1, #1
-cmp r0, #1000
+cmp r0, #10
 bl .setup--end setup
-mov r0, #0--i index, beginning of selection sort
-.outer
-mov r1, r0--j index
-ldr r2, r1--old min value
-mov r3, r1--old min address
-cmp r0, #1000
-bl .inner
-b .end
-.inner
-add r1, r1, #1--increment j
-cmp r1, #1000
-bgeq .swap
-ldr r4, r1--load value at index j
-cmp r2, r4--compare to current min
-bg .update
-b .inner
-.update
-mov r2, r4--update min value
-mov r3, r1--update min address
-b .inner
-.swap
-ldr r5, r0--load current value at adress r0 into swap variable r5
-str r5, r3--store this value in r5
-str r2, r0
-add r0, r0, #1--increment i
-b .outer
-.end
