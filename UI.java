@@ -76,22 +76,17 @@ class UI extends JPanel implements ActionListener {
 		
 	}
 
-	private void updateMemory(Memory2 m, int start, int end) { // change to update text areas
-		Integer[] a = new Integer[m.getWords()]; 
-		for (int i = 0; i < a.length; i++) {
-			a[i] = i;
-		}
-
-		memTableModel = new DefaultTableModel(m.displayPart(start, end), a);
-		mem = new JTable(memTableModel);
+	private void updateMemory() { // change to update text areas
+		DRAMText.setText(DRAM.toString());
+			if (useCache == 1) {
+				L1Text.setText(L1.toString());
+				L2Text.setText(L2.toString());
+			}
 	}
 
 	private void updateRegisters() {
-
 		String str = "";
-
 		for (int i = 0; i < pipe.registers.length; i++) {
-
 			str += " " + REGISTER_NAMES[i] + ": " + pipe.registers[i] + "\n";
 		}
 
@@ -113,12 +108,7 @@ class UI extends JPanel implements ActionListener {
 
 			cycleCount.setText("" + clock);
 
-			DRAMText.setText(DRAM.toString());
-			if (useCache == 1) {
-				L1Text.setText(L1.toString());
-				L2Text.setText(L2.toString());
-			}
-
+			updateMemory();
 			updatePipeline();
 			updateRegisters();
 			//regTableModel.fireTableDataChanged();
@@ -147,39 +137,31 @@ class UI extends JPanel implements ActionListener {
 			//remove(mem);
 			//add(drawMemory(pipe.memory, 0, 1));
 
-			DRAMText.setText(DRAM.toString());
-			if (useCache == 1) {
-				L1Text.setText(L1.toString());
-				L2Text.setText(L2.toString());
-			}
+			updateMemory();
 			updatePipeline();
 			updateRegisters();
 		} else if (s.equals("Flush Cache")) {
 			if (useCache == 1) {
-				L1.evictAll();
-				L2.evictAll();
-				DRAMText.setText(DRAM.toString());
-				L1Text.setText(L1.toString());
-				L2Text.setText(L2.toString());
+				//L1.evictAll();
+				//L2.evictAll();
+				updateMemory();
 
 			}
 		} else if (s.equals("Run")) {
-			long start = System.currentTimeMillis();
+			//long start = System.currentTimeMillis();
 			while (pipe.notEndOfProgram()) {
 				if (usePipeline == 1)  pipe.cycle();
 				else pipe.cycleNoPipeline();
+				clock++;
 			}
-			DRAMText.setText(DRAM.toString());
-			if (useCache == 1) {
-				L1Text.setText(L1.toString());
-				L2Text.setText(L2.toString());
-			}
+			updateMemory();
 			updatePipeline();
 			updateRegisters();
-			long end = System.currentTimeMillis();
+			cycleCount.setText("" + clock);
+			//long end = System.currentTimeMillis();
 
-			long runTime = (end-start);
-			time.setText("Run Time: " + runTime);
+			//long runTime = (end-start);
+			//time.setText("Run Time: " + runTime);
 
 
 		}
@@ -239,7 +221,7 @@ class UI extends JPanel implements ActionListener {
         ui.add(continueButton);
 
 		frame.add(ui);
-		frame.setSize(600, 600);
+		frame.setSize(1000, 1000);
 		frame.setVisible(true);
 
 		while (!chosen){Thread.sleep(100);}
@@ -257,6 +239,15 @@ class UI extends JPanel implements ActionListener {
 
 		ui.setMemory(useCache == 1 ? L1 : DRAM);
 
+		/*
+		if (useCache == 1) 
+			ui.setMemory(L1);
+		else {
+			DRAM.setLevel(1);
+			DRAM.setWays(DRAM.getWords());
+			ui.setMemory(DRAM);
+		}
+		*/
 		
 
 		JPanel left = new JPanel();
@@ -322,7 +313,6 @@ class UI extends JPanel implements ActionListener {
 
 
 
-
 		topRight.setLayout(new BorderLayout());
 
 		pipeText = new JTextArea();
@@ -333,7 +323,7 @@ class UI extends JPanel implements ActionListener {
 
 
 		
-
+		ui.updateMemory();
 
 		JSplitPane right = new JSplitPane(SwingConstants.HORIZONTAL, topRight, bottomRight);
 		JSplitPane whole = new JSplitPane(SwingConstants.VERTICAL, left, right);

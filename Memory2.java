@@ -28,7 +28,7 @@ public class Memory2 {
     private int conMisses;
     private int hits;
 
-    public Memory2(int s, int c, int o, int a, int l, Memory2 n) { // -1 for a if not cache
+    public Memory2(int s, int c, int o, int a, int l, Memory2 n) { // a = o for if not cache
         level = l;
         next = n;
         
@@ -63,12 +63,20 @@ public class Memory2 {
 
     public Memory2(){}
 
-    public int getCycles() {
-        return cycles;
-    }
+    public int getCycles() {return cycles;}
 
-    public int getWords() {
-        return words;
+    public int getWords() {return words;}
+
+    public void setWays(int a) {ways = a;}
+
+    public int getLevel() {return level;}
+
+    public int[] getNewLine(int addr) {
+        int[] newLine = new int[words];
+        for (int i = 0; i < words; i++) {
+            newLine[i] = mem[addr/words][i];
+        }
+        return newLine;
     }
 
     private void updatePriorities(int line, int prio) {
@@ -121,15 +129,21 @@ public class Memory2 {
 
                 int[] newLine = new int[words];
                 
-                
-                    for (int j = 0; j < words; j++) {
-                        newLine[j] = mem[spot][j];
-                    }
+                for (int j = 0; j < words; j++) {
+                    newLine[j] = mem[spot][j];
+                }
                 
                 conMisses++;
                 int eAddr = (tags[spot]*(sets) + (spot/ways)) * words;
-                for (int i = 0; i <= next.getCycles(); i++) 
+                
+                
+                for (int k = 0; k <= next.getCycles(); k++) {
+                    //System.out.println("calling next on " + level);
                     next.access(eAddr, newLine, stage, false);
+                }
+                //if (!response.done) return wait;
+
+                
             }
             //else  
             //  prio = ways; 
@@ -146,9 +160,19 @@ public class Memory2 {
             mem[spot][i] = nextLevel.data[i];
         }
 
+        if (level == 1) {
+            //next.makeInvalid(addr);
+        }
+
+        //System.out.println("getting spot: " + spot);
         int[] spotArr =  {spot};
         done.data = spotArr;
         return done;
+    }
+
+    public void makeInvalid(int addr) {
+        int spot = inCache(addr);
+        if (valid[spot]) valid[spot] = false;
     }
 
     private Data getSpot(int addr) {
@@ -173,10 +197,10 @@ public class Memory2 {
         if (!s.done) return wait;
 
         int spot = s.data[0];
-        if (spot < mem.length) {
+        //if (spot < mem.length) {
             updatePriorities(spot, priorities[spot]);
             done.data = mem[spot];
-        }
+        //}
         return done;
     }
 
@@ -186,8 +210,8 @@ public class Memory2 {
         if (!s.done) return wait;
 
         int spot = s.data[0];
-        if (data.length == 1) {
-            if (spot < mem.length)
+        if (level == 1) {
+            //if (spot < mem.length)
                 mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
         } else {
             for (int i = 0; i < words; i++) {
@@ -195,7 +219,7 @@ public class Memory2 {
             }
         }
 
-        if (spot < mem.length) {
+        if (level != 0) {
             updatePriorities(spot, priorities[spot]);
             dirty[spot] = true;
         }
@@ -210,17 +234,19 @@ public class Memory2 {
 
                 for (int j = 0; j < words; j++) {
                     newLine[j] = mem[i][j];
-                    tags[j] = 0;
-                    dirty[j] = false;
-                    valid[j] = false;
-                    priorities[j] = words;
                     clearLine[j] = 0;
                 }
                 
                 int eAddr = (tags[i]*(sets) + (i/ways)) * words;
-                for (int k = 0; k <= next.getCycles(); k++) 
-                    next.access(eAddr, newLine, stage, false);
-
+                if (dirty[i] && valid[i]) {
+                    for (int k = 0; k <= next.getCycles(); k++) {
+                        next.access(eAddr, newLine, stage, false);
+                    }
+                }
+                tags[i] = 0;
+                dirty[i] = false;
+                valid[i] = false;
+                priorities[i] = words;
                 mem[i] = clearLine;
             }
         }
@@ -276,6 +302,7 @@ public class Memory2 {
     }
 
     public Data access(int addr, int[] data, int s, boolean isRead) { 
+        //boolean currInstruc = false;
         //System.out.println((level == 0 ? "DRAM":"L" + level) + (isRead ? " read " : " write " + data[0] + " " + data[1] + " at ") + addr + " clock: " + clock);
         Data a;
         if (clock == cycles) {
@@ -284,6 +311,7 @@ public class Memory2 {
             stage = s;
         }
         if (currAddr == addr && stage == s) { 
+            //currInstruc = true;
             clock--;
             if (isRead) {
                 a = read(addr);
@@ -307,11 +335,13 @@ public class Memory2 {
             
             if (clock <= 0) {
                 clock = cycles;
+                //System.out.println("returning done on level: " + level);
                 return done;
             }
             
         }
         
+        //System.out.println("current instruction? " + currInstruc + " level: " + level);
         return wait;
     }
 
@@ -324,6 +354,7 @@ public class Memory2 {
         int[] line2 = {2, 3};
         int[] line = {0, 1};
         int[] line3 = {4, 5};
+        int[] line4 = {6, 7};
         //for (int i = 0; i < 5; i++) {
             //DRAM.access(0, line, 0, false);}
 
@@ -338,6 +369,8 @@ public class Memory2 {
         while (!(L1.access(3, line2, 0, false)).done) {}
         while (!(L1.access(4, line3, 0, false)).done) {}
         while (!(L1.access(5, line3, 0, false)).done) {}
+        while (!(L1.access(6, line4, 0, false)).done) {}
+        while (!(L1.access(7, line4, 0, false)).done) {}
         
         /*
          0: 3    1: 6

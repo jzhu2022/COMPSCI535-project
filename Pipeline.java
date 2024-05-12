@@ -401,12 +401,28 @@ public class Pipeline {
             if (i.opcode < 3) {
                 Data read = memory.access(i.result, null, 3, true);
                 if (read.done) {
-                    i.result = read.data[0];
+                    if (memory.getLevel() == 1)
+                        i.result = read.data[0];
+                    else    
+                        i.result = read.data[i.result % memory.getWords()];
+
                 } else {
                     return stall();
                 }
             } else if (i.opcode < 6) {
-                int[] d = {registers[i.destination]};
+                int[] d;
+                if (memory.getLevel() == 1) {
+                    d = new int[1];
+                    d[0] = registers[i.destination];
+                }
+                else {
+                    d = memory.getNewLine(i.result);
+                    
+                    
+                    d[i.result%memory.getWords()] = registers[i.destination];
+                    
+                }
+
                 Data write = memory.access(i.result, d, 3, false);
                 if (!write.done) {  
                     return stall();
@@ -549,7 +565,7 @@ public class Pipeline {
         Memory2 L2 = new Memory2(8, 5, 2, 2, 2, DRAM);
         Memory2 L1 = new Memory2(4, 1, 2, 2, 1, L2);
 
-        Pipeline p = new Pipeline(L1);
+        Pipeline p = new Pipeline(DRAM);
 
 
         //make sure pending registers are reset when squashing
