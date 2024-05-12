@@ -90,8 +90,8 @@ class UI extends JPanel implements ActionListener {
 			L2Hits.setText("L2 Cache Hits: " + L2.getHits());
 			L1ConMisses.setText("L1 Cache Conflict Misses: " + L1.getCon());
 			L2ConMisses.setText("L2 Cache Conflict Misses: " + L2.getCon());
-			L1ConMisses.setText("L1 Cache Cold Misses: " + L1.getCold());
-			L2ConMisses.setText("L2 Cache Cold Misses: " + L2.getCold());
+			L1ColdMisses.setText("L1 Cache Cold Misses: " + L1.getCold());
+			L2ColdMisses.setText("L2 Cache Cold Misses: " + L2.getCold());
 		}
 	}
 
@@ -311,6 +311,7 @@ class UI extends JPanel implements ActionListener {
 		control.add(runButton);
 
 		JPanel cache = new JPanel();
+		cache.setLayout(new GridLayout(2, 3));
 		if (useCache == 1) { 
 			control.add(flushButton);
 			cache.add(L1Hits);

@@ -112,6 +112,8 @@ public class Memory2 {
     private Data bringIntoCache(int addr, boolean isRead) {
         int set = (addr / words) % (sets); 
         int tag = addr / (sets * words);
+
+        boolean conflict = false;
         
         int spot = -1, prio = -1; 
         for (int i = set*ways; i < set*ways + ways; i++) {
@@ -139,7 +141,6 @@ public class Memory2 {
                     newLine[j] = mem[spot][j];
                 }
                 
-                conMisses++;
                 int eAddr = (tags[spot]*(sets) + (spot/ways)) * words;
                 
                 
@@ -151,9 +152,10 @@ public class Memory2 {
 
                 
             }
+            conflict = true;
             //else  
             //  prio = ways; 
-        } else {coldMisses++;}
+        }
 
          
         Data nextLevel = next.access(addr, new int[0] , stage, true);
@@ -169,6 +171,9 @@ public class Memory2 {
         if (level == 1 && !isRead) {
             next.makeInvalid(addr);
         }
+
+        if (conflict) conMisses++;
+        else coldMisses++;
 
         //System.out.println("getting spot: " + spot);
         int[] spotArr =  {spot};
