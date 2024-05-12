@@ -1,35 +1,48 @@
+mov r10, #3--dimensions of matrix
+mul r11, r10, r10--size of matrix in memory, end address of first matrix
+mul r12, r11, #2--end address of second matrix, starting address of solution
 mov r0, #0--address
-mov r1, #10--value, initialized to length of array
+mov r1, #0--value
+mov r2, #0--count
 .setup
 str r1, r0
 add r0, r0, #1
-sub r1, r1, #1
-cmp r0, #10
-bl .setup--end setup
-mov r0, #0--i index, beginning of selection sort
-.outer
-mov r1, r0--j index
-ldr r2, r1--old min value
-mov r3, r1--old min address
-cmp r0, #10
-bl .inner
-b .end
-.inner
-add r1, r1, #1--increment j
-cmp r1, #10
-bgeq .swap
-ldr r4, r1--load value at index j
-cmp r2, r4--compare to current min
-bg .update
-b .inner
-.update
-mov r2, r4--update min value
-mov r3, r1--update min address
-b .inner
-.swap
-ldr r5, r0--load current value at adress r0 into swap variable r5
-str r5, r3--store this value in r5
-str r2, r0
-add r0, r0, #1--increment i
-b .outer
+add r1, r1, #1
+cmp r1, r11
+bl .setup
+mov r1, #0
+add r2, r2, #1
+cmp r2, #2
+bl .setup--2 matrices are created
+mov r0, #0--row index of first matrix
+mov r7, #0--row index reset point
+mov r1, r11--column index of second matrix
+mov r2, r12--starting address of solution
+mov r3, #0--calculated element
+.calc_element--calculates an element of the solution
+ldr r4, r0--row element
+ldr r5, r1--column element
+mul r6, r4, r5--multiply the elements
+add r3, r3, r6--add elements
+add r0, r0, #1--calc next row index
+add r1, r1, r10--calc next column index
+cmp r1, r12--calculate rest of r3
+bleq .calc_element
+str r3, r2--store solution
+mov r3, #0--reset r3
+add r2, r2, #1--increment address to store next element of array
+add r1, r1, #1--change column
+mod r1, r1, r10--change column
+add r1, r1, r11--change column
+cmp r1, r11--if we indexed to the last column -> start at next row
+beq .inc_row
+b .reset_row
+.inc_row
+add r7, r7, r10--start at next row
+cmp r7, r11--end of first matrix
+beq .end
+b .reset_row
+.reset_row
+mov r0, r7
+b .calc_element
 .end

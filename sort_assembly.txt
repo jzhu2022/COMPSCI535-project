@@ -1,22 +1,22 @@
 mov r0, #0--address
-mov r1, #10--value, initialized to length of array
+mov r1, #64--value, initialized to length of array
 .setup
 str r1, r0
 add r0, r0, #1
 sub r1, r1, #1
-cmp r0, #10
+cmp r0, #64
 bl .setup--end setup
 mov r0, #0--i index, beginning of selection sort
 .outer
 mov r1, r0--j index
 ldr r2, r1--old min value
 mov r3, r1--old min address
-cmp r0, #10
+cmp r0, #64
 bl .inner
 b .end
 .inner
 add r1, r1, #1--increment j
-cmp r1, #10
+cmp r1, #64
 bgeq .swap
 ldr r4, r1--load value at index j
 cmp r2, r4--compare to current min

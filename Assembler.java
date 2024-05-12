@@ -569,30 +569,6 @@ public class Assembler {
                 //immediate
                 instruction |= Integer.valueOf(operands[0]);
             }
-        } else if (mnemonic.equals("BL")) {  
-            condition = 4;
-            instruction &= condition << 29; 
-            //type
-            int type = 4;
-            instruction |= type << 26;
-            //opcode
-            int opcode = 2;
-            instruction |= opcode << 22;
-            //label
-            instruction |= Integer.valueOf(symbols.get(operands[0]));
-        } else if (mnemonic.equals("BX")) {  
-            condition = 4;
-            instruction &= condition << 29; 
-            //type
-            int type = 4;
-            instruction |= type << 26;
-            //opcode
-            int opcode = 3;
-            instruction |= opcode << 22;
-        } else if (mnemonic.equals("halt")) {
-            //type
-            int type = 5;
-            instruction |= type << 26;            
         } else {
             System.out.println("instruction at " + currentLine + " was not recognized");
         }

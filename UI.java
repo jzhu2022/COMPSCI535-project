@@ -32,7 +32,7 @@ class UI extends JPanel implements ActionListener {
 	static JTable mem;
 	static JTable reg;
 
-	static int DRAMSize = 16, L2Size = 8, L1Size = 4;
+	static int DRAMSize = 200, L2Size = 16, L1Size = 8;
 	static int wordsPerLine = 2;
 
 
@@ -101,7 +101,7 @@ class UI extends JPanel implements ActionListener {
 			// set the text of the label to the text of the field
 			//label.setText(t.getText());
 
-			for (int i = 0; i < Integer.valueOf(t.getText()); i++) {
+			for (int i = 0; i < Integer.valueOf(t.getText()) && pipe.notEndOfProgram(); i++) {
 				readOut = usePipeline == 1 ? pipe.cycle() : pipe.cycleNoPipeline();
 				clock++;	
 			}
@@ -233,7 +233,7 @@ class UI extends JPanel implements ActionListener {
         ui.remove(continueButton);
 
 
-		DRAM = new Memory2(DRAMSize, 10, wordsPerLine, -1, 0, null);
+		DRAM = new Memory2(DRAMSize, 100, wordsPerLine, -1, 0, null);
         L2 = new Memory2(L2Size, 5, wordsPerLine, 2, 2, DRAM);
         L1 = new Memory2(L1Size, 1, wordsPerLine, 2, 1, L2);
 
