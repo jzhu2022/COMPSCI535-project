@@ -16,11 +16,9 @@ class UI extends JPanel implements ActionListener {
 	static JTextArea DRAMText, L2Text, L1Text;
     static JTextArea pipeText;
 	static JTextArea registerText;
-	static JLabel time;
+	static JLabel L1Hits, L2Hits, L1ConMisses, L2ConMisses, L1ColdMisses, L2ColdMisses;
 
 	static JTextField t;
-	static JTextField associativity;
-	static JTextField lineLength;
 	static JTextField cycleCount;
 	static JFrame frame;
 	static JButton button;
@@ -34,9 +32,8 @@ class UI extends JPanel implements ActionListener {
 	static JTable mem;
 	static JTable reg;
 
-	static int DRAMSize = 2500, L2Size = 500, L1Size = 250;//# of words included in each memory system, since a word has 4 bytes(32bits): L1=1kB, L2=2kB, DRAM=10kB
+	static int DRAMSize = 16, L2Size = 8, L1Size = 4;
 	static int wordsPerLine = 2;
-	static int a = 2;
 
 
 	static int clock; // change type to Clock
@@ -81,10 +78,21 @@ class UI extends JPanel implements ActionListener {
 
 	private void updateMemory() { // change to update text areas
 		DRAMText.setText(DRAM.toString());
-			if (useCache == 1) {
-				L1Text.setText(L1.toString());
-				L2Text.setText(L2.toString());
-			}
+		if (useCache == 1) {
+			L1Text.setText(L1.toString());
+			L2Text.setText(L2.toString());
+		}
+	}
+
+	private void updateStats() {
+		if (useCache == 1) {
+			L1Hits.setText("L1 Cache Hits: " + L1.getHits());
+			L2Hits.setText("L2 Cache Hits: " + L2.getHits());
+			L1ConMisses.setText("L1 Cache Conflict Misses: " + L1.getCon());
+			L2ConMisses.setText("L2 Cache Conflict Misses: " + L2.getCon());
+			L1ConMisses.setText("L1 Cache Cold Misses: " + L1.getCold());
+			L2ConMisses.setText("L2 Cache Cold Misses: " + L2.getCold());
+		}
 	}
 
 	private void updateRegisters() {
@@ -103,8 +111,7 @@ class UI extends JPanel implements ActionListener {
 		if (s.equals("Submit")) {
 			// set the text of the label to the text of the field
 			//label.setText(t.getText());
-
-			for (int i = 0; i < Integer.valueOf(t.getText()) && pipe.notEndOfProgram(); i++) {
+			for (int i = 0; i < Integer.valueOf(t.getText()); i++) {
 				readOut = usePipeline == 1 ? pipe.cycle() : pipe.cycleNoPipeline();
 				clock++;	
 			}
@@ -114,6 +121,7 @@ class UI extends JPanel implements ActionListener {
 			updateMemory();
 			updatePipeline();
 			updateRegisters();
+			updateStats();
 			//regTableModel.fireTableDataChanged();
 			//remove(reg);
 			//add(drawRegisters());
@@ -143,15 +151,15 @@ class UI extends JPanel implements ActionListener {
 			updateMemory();
 			updatePipeline();
 			updateRegisters();
+			updateStats();
 		} else if (s.equals("Flush Cache")) {
 			if (useCache == 1) {
-				//L1.evictAll();
-				//L2.evictAll();
+				L1.evictAll();
+				L2.evictAll();
 				updateMemory();
 
 			}
 		} else if (s.equals("Run")) {
-			//long start = System.currentTimeMillis();
 			while (pipe.notEndOfProgram()) {
 				if (usePipeline == 1)  pipe.cycle();
 				else pipe.cycleNoPipeline();
@@ -160,14 +168,26 @@ class UI extends JPanel implements ActionListener {
 			updateMemory();
 			updatePipeline();
 			updateRegisters();
+			updateStats();
 			cycleCount.setText("" + clock);
-			//long end = System.currentTimeMillis();
-
-			//long runTime = (end-start);
-			//time.setText("Run Time: " + runTime);
-
 
 		}
+	}
+
+	public static void addStats(JPanel panel, JLabel hits, JLabel conMisses, JLabel coldMisses, Memory2 mem) {
+		panel.add(hits);
+		panel.add(conMisses);
+		panel.add(coldMisses);
+	}
+	public static JPanel makeTextArea(String name, JTextArea memText, int level) {
+		memText.setEditable(false);
+		JPanel memPanel = new JPanel();
+		memPanel.setLayout(new BorderLayout());
+		memPanel.add(new JLabel(name), BorderLayout.PAGE_START);
+
+		memPanel.add(new JScrollPane(memText), BorderLayout.CENTER);
+		
+		return memPanel;
 	}
 	public static void main(String[] args) throws Exception {
 		cacheLabel = new JLabel("Cache? ");
@@ -191,8 +211,7 @@ class UI extends JPanel implements ActionListener {
         continueButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (useCache != -1 && usePipeline != -1) chosen = true;
-                if (!associativity.getText().isEmpty()) a = Integer.valueOf(associativity.getText());
-				if (!lineLength.getText().isEmpty()) wordsPerLine = Integer.valueOf(lineLength.getText());
+                 
             }
         });
 
@@ -211,14 +230,8 @@ class UI extends JPanel implements ActionListener {
 		cycleButton.addActionListener(ui);
 		flushButton.addActionListener(ui);
 		runButton.addActionListener(ui);
-		time = new JLabel();
 
 		t = new JTextField(16);
-		JLabel associativityLabel = new JLabel("Associativity");
-		associativity = new JTextField(16);
-		JLabel lineLengthLabel = new JLabel("Line Width");
-		lineLength = new JTextField(16);
-
 
 		cycleCount = new JTextField(16);
 		
@@ -227,10 +240,6 @@ class UI extends JPanel implements ActionListener {
         ui.add(cacheSelect);
         ui.add(pipelineLabel);
         ui.add(pipelineSelect);
-		ui.add(associativityLabel);
-		ui.add(associativity);
-		ui.add(lineLengthLabel);
-		ui.add(lineLength);
         ui.add(continueButton);
 
 		frame.add(ui);
@@ -246,39 +255,16 @@ class UI extends JPanel implements ActionListener {
         ui.remove(continueButton);
 
 
-		DRAM = new Memory2(DRAMSize, 100, wordsPerLine, -1, 0, null);
-        L2 = new Memory2(L2Size, 5, wordsPerLine, a, 2, DRAM);
-        L1 = new Memory2(L1Size, 1, wordsPerLine, a, 1, L2);
+		DRAM = new Memory2(DRAMSize, 10, wordsPerLine, -1, 0, null);
+        L2 = new Memory2(L2Size, 5, wordsPerLine, 2, 2, DRAM);
+        L1 = new Memory2(L1Size, 1, wordsPerLine, 2, 1, L2);
 
 		ui.setMemory(useCache == 1 ? L1 : DRAM);
 
-		/*
-		if (useCache == 1) 
-			ui.setMemory(L1);
-		else {
-			DRAM.setLevel(1);
-			DRAM.setWays(DRAM.getWords());
-			ui.setMemory(DRAM);
-		}
-		*/
-		
-
+	
 		JPanel left = new JPanel();
         JPanel topRight = new JPanel();
         JPanel bottomRight = new JPanel();
-
-		
-
-		bottomRight.add(t);
-		bottomRight.add(cycleCount);
-		bottomRight.add(button);
-		bottomRight.add(cycleButton);
-		if (useCache == 1) bottomRight.add(flushButton);
-		bottomRight.add(runButton);
-		bottomRight.add(time);
-		
-
-		
 
 		left.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -287,44 +273,25 @@ class UI extends JPanel implements ActionListener {
 		left.setLayout(leftLayout);
 
 
-		JPanel registerPanel = new JPanel();
-		registerPanel.setLayout(new BorderLayout());
-
 		registerText = new JTextArea();
-		registerText.setEditable(false);
-		ui.updateRegisters();
-		registerPanel.add(new JLabel("Registers"), BorderLayout.PAGE_START);
-		registerPanel.add(new JScrollPane(registerText), BorderLayout.CENTER);
-		left.add(registerPanel);
+		left.add(makeTextArea("Registers", registerText, 0));
 
-        DRAMText = new JTextArea(DRAM.toString());
-		DRAMText.setEditable(false);
-		JPanel DRAMPanel = new JPanel();
-		DRAMPanel.setLayout(new BorderLayout());
-		DRAMPanel.add(new JLabel("DRAM"), BorderLayout.PAGE_START);
-		DRAMPanel.add(new JScrollPane(DRAMText), BorderLayout.CENTER);
 		if (useCache == 1) {
-			L2Text = new JTextArea(L2.toString());
+			L1Hits = new JLabel();
+			L1ColdMisses = new JLabel();
+			L1ConMisses = new JLabel();
+			L2Hits = new JLabel();
+			L2ColdMisses = new JLabel();
+			L2ConMisses = new JLabel();
 			L1Text = new JTextArea(L1.toString());
-			L2Text.setEditable(false);
-			L1Text.setEditable(false);
-			JPanel L1Panel = new JPanel();
-			L1Panel.setLayout(new BorderLayout());
-			L1Panel.add(new JLabel("L1 Cache"), BorderLayout.PAGE_START);
-			L1Panel.add(new JScrollPane(L1Text), BorderLayout.CENTER);
-
-			JPanel L2Panel = new JPanel();
-			L2Panel.setLayout(new BorderLayout());
-			L2Panel.add(new JLabel("L2 Cache"), BorderLayout.PAGE_START);
-			L2Panel.add(new JScrollPane(L2Text), BorderLayout.CENTER);
-			left.add(L1Panel);
-			left.add(L2Panel);
+			L2Text = new JTextArea(L2.toString());
+			left.add(makeTextArea(L1.getName(), L1Text, 1));
+			left.add(makeTextArea(L2.getName(), L2Text, 2));
+			
         }
 		
-		
-		left.add(DRAMPanel);
-
-
+		DRAMText = new JTextArea(DRAM.toString());
+		left.add(makeTextArea(DRAM.getName(), DRAMText, 0));
 
 		topRight.setLayout(new BorderLayout());
 
@@ -334,9 +301,30 @@ class UI extends JPanel implements ActionListener {
 		topRight.add(new JLabel("Pipeline"), BorderLayout.PAGE_START);
 		topRight.add(pipeText, BorderLayout.CENTER);
 
+		bottomRight.setLayout(new GridLayout(2, 0));
 
-		
-		ui.updateMemory();
+		JPanel control = new JPanel();
+		control.add(t);
+		control.add(cycleCount);
+		control.add(button);
+		control.add(cycleButton);
+		control.add(runButton);
+
+		JPanel cache = new JPanel();
+		if (useCache == 1) { 
+			control.add(flushButton);
+			cache.add(L1Hits);
+			cache.add(L1ColdMisses);
+			cache.add(L1ConMisses);
+			cache.add(L2Hits);
+			cache.add(L2ColdMisses);
+			cache.add(L2ConMisses);
+		}
+
+		bottomRight.add(control);
+		bottomRight.add(cache);
+
+		ui.updateStats();
 
 		JSplitPane right = new JSplitPane(SwingConstants.HORIZONTAL, topRight, bottomRight);
 		JSplitPane whole = new JSplitPane(SwingConstants.VERTICAL, left, right);

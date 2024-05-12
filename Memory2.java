@@ -71,6 +71,13 @@ public class Memory2 {
 
     public int getLevel() {return level;}
 
+
+    public String getName() {
+        if (level == 0) return "DRAM";
+        else if (level == 1) return "L1 Cache";
+        else return "L2 Cache";
+    }
+
     public int[] getNewLine(int addr) {
         int[] newLine = new int[words];
         for (int i = 0; i < words; i++) {
@@ -102,7 +109,7 @@ public class Memory2 {
         return -1;
     }
 
-    private Data bringIntoCache(int addr) {
+    private Data bringIntoCache(int addr, boolean isRead) {
         int set = (addr / words) % (sets); 
         int tag = addr / (sets * words);
         
@@ -121,7 +128,6 @@ public class Memory2 {
 
         // need to write back
         // tag set offset
-        // tag * (set+offset bits) + 
         if (valid[spot]) {
             if (dirty[spot]) {
                 //System.out.println("evicting");
@@ -160,8 +166,8 @@ public class Memory2 {
             mem[spot][i] = nextLevel.data[i];
         }
 
-        if (level == 1) {
-            //next.makeInvalid(addr);
+        if (level == 1 && !isRead) {
+            next.makeInvalid(addr);
         }
 
         //System.out.println("getting spot: " + spot);
@@ -175,13 +181,13 @@ public class Memory2 {
         if (valid[spot]) valid[spot] = false;
     }
 
-    private Data getSpot(int addr) {
+    private Data getSpot(int addr, boolean isRead) {
         int spot = addr/words;
         if (level != 0) {
             
             spot = inCache(addr);
             if (spot == -1) {
-                Data s = bringIntoCache(addr);
+                Data s = bringIntoCache(addr, isRead);
                 if (!s.done) return wait;
                 spot = s.data[0];
             } else {hits++;}
@@ -193,7 +199,7 @@ public class Memory2 {
     }
 
     private Data read(int addr) { // returns line
-        Data s = getSpot(addr);
+        Data s = getSpot(addr, true);
         if (!s.done) return wait;
 
         int spot = s.data[0];
@@ -206,11 +212,11 @@ public class Memory2 {
 
     private Data write(int addr, int[] data) {
         
-        Data s = getSpot(addr);
+        Data s = getSpot(addr, false);
         if (!s.done) return wait;
 
         int spot = s.data[0];
-        if (level == 1) {
+        if (data.length == 1) {
             //if (spot < mem.length)
                 mem[spot][addr%words] = data[0]; // if it's L1, data will be array with changed word only 
         } else {
@@ -239,9 +245,9 @@ public class Memory2 {
                 
                 int eAddr = (tags[i]*(sets) + (i/ways)) * words;
                 if (dirty[i] && valid[i]) {
-                    for (int k = 0; k <= next.getCycles(); k++) {
-                        next.access(eAddr, newLine, stage, false);
-                    }
+                    
+                    while(!next.access(eAddr, newLine, stage, false).done);
+                    
                 }
                 tags[i] = 0;
                 dirty[i] = false;
@@ -348,4 +354,5 @@ public class Memory2 {
     public int getCold() {return coldMisses;}
     public int getCon() {return conMisses;}
     public int getHits() {return hits;}
+
 }
