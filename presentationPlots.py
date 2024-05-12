@@ -28,27 +28,27 @@ br4 = [x + barWidth for x in br3]
 
 # Make the plot
 ax[0].bar(br1, matrixtwotwo, color ='r', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 2\nLine Length: 2') 
+        edgecolor ='black', label ='Associativity: 2\nLine Width: 2') 
 ax[0].bar(br2, matrixtwofour, color ='g', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 2\nLine Length: 4') 
+        edgecolor ='black', label ='Associativity: 2\nLine Width: 4') 
 ax[0].bar(br3, matrixfourtwo, color ='b', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 4\nLine Length: 2') 
+        edgecolor ='black', label ='Associativity: 4\nLine Width: 2') 
 ax[0].bar(br4, matrixfourfour, color ='y', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 4\nLine Length: 4')
+        edgecolor ='black', label ='Associativity: 4\nLine Width: 4')
 ax[1].bar(br1, selectiontwotwo, color ='r', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 2\nLine Length: 2') 
+        edgecolor ='black', label ='Associativity: 2\nLine Width: 2') 
 ax[1].bar(br2, selectiontwofour, color ='g', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 2\nLine Length: 4') 
+        edgecolor ='black', label ='Associativity: 2\nLine Width: 4') 
 ax[1].bar(br3, selectionfourtwo, color ='b', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 4\nLine Length: 2') 
+        edgecolor ='black', label ='Associativity: 4\nLine Width: 2') 
 ax[1].bar(br4, selectionfourfour, color ='y', width = barWidth, 
-        edgecolor ='black', label ='Associativity: 4\nLine Length: 4') 
+        edgecolor ='black', label ='Associativity: 4\nLine Width: 4') 
 ax[0].sharex(ax[1])
 
 ax[0].set_title("25 X 25 Matrix Multiplication")
 ax[1].set_title("1000 Integer Selection Sort")
 
-plt.ylabel('Clock Cycles', fontsize = 15) 
+fig.supylabel('Clock Cycles', fontsize = 15)
 # Adding Xticks
 plt.xticks([r + 1.5*barWidth for r in range(len(matrixtwotwo))], 
         ['Cache and Pipe', 'Cache, No Pipe', 'No Cache, Piped', 'No Cache, No Pipe'])
