@@ -479,8 +479,8 @@ public class Pipeline {
         return i;
     }
 
-    public boolean notEndOfProgram() {//checks if pipeline is filled with halt instructions
-        return inFlightInstructions[0].instruction != -201326592 || inFlightInstructions[1].instruction != -201326592 || inFlightInstructions[2].instruction != -201326592 || inFlightInstructions[3].instruction != -201326592;
+    public boolean notEndOfProgram() {//checks if pipeline is filled with halt instructions or end of program file is reached
+        return registers[15] < 64 && (inFlightInstructions[0].instruction != -201326592 || inFlightInstructions[1].instruction != -201326592 || inFlightInstructions[2].instruction != -201326592 || inFlightInstructions[3].instruction != -201326592);
     }
 
     public Instruction[] cycle() {
@@ -513,7 +513,7 @@ public class Pipeline {
         return inFlightInstructions[0].cond == 5 && inFlightInstructions[1].cond == 5 && inFlightInstructions[2].cond == 5 && inFlightInstructions[3].cond == 5;
     }
 
-    public Instruction[] cycleNoPipeline() {//
+    public Instruction[] cycleNoPipeline() {
         Instruction[] readOut = new Instruction[5];
         readOut[4] = inFlightInstructions[3];
 
@@ -542,23 +542,25 @@ public class Pipeline {
     }
 
     public static void main(String[] args) {
-        Memory2 DRAM = new Memory2(200, 10, 2, -1, 0, null);
+        Memory2 DRAM = new Memory2(100, 100, 2, -1, 0, null);
         Memory2 L2 = new Memory2(16, 5, 2, 2, 2, DRAM);
         Memory2 L1 = new Memory2(8, 1, 2, 2, 1, L2);
 
-        Pipeline p = new Pipeline(DRAM);
+        Pipeline p = new Pipeline(L1);
+
+        int cycles = 0;
 
         while(p.notEndOfProgram()) {
         //for (int i = 0; i < 600; i++) {
             Instruction cheat = p.inFlightInstructions[3];
             p.cycle();
+            cycles++;
             /*
             System.out.println("fetching:  " + Integer.toBinaryString(p.inFlightInstructions[0].instruction) + " - " + p.inFlightInstructions[0].instruction);
             System.out.println("decoding:  " + Integer.toBinaryString(p.inFlightInstructions[1].instruction) + " - " + p.inFlightInstructions[1].instruction);
             System.out.println("executing: " + Integer.toBinaryString(p.inFlightInstructions[2].instruction) + " - " + p.inFlightInstructions[2].instruction);
             System.out.println("Memory:    " + Integer.toBinaryString(p.inFlightInstructions[3].instruction) + " - " + p.inFlightInstructions[3].instruction);
             System.out.println("Writeback: " + Integer.toBinaryString(cheat.instruction)  + " - " + cheat.instruction + " - " + cheat.cond);
-            */
             System.out.println("Registers: " + p.registers[0] + ", " + p.registers[1] + ", " + p.registers[2] + ", " + p.registers[3] + ", " + p.registers[4] + ", " + p.registers[5] + "\n\n");
             
             System.out.println("L1:");
@@ -567,6 +569,8 @@ public class Pipeline {
             L2.display();
             System.out.println("DRAM:");
             DRAM.display();
+            */
         }
+        System.out.println(cycles);
     }
 }
