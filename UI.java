@@ -19,6 +19,8 @@ class UI extends JPanel implements ActionListener {
 	static JLabel L1Hits, L2Hits, L1ConMisses, L2ConMisses, L1ColdMisses, L2ColdMisses;
 
 	static JTextField t;
+	static JTextField associativity;
+	static JTextField lineLength;
 	static JTextField cycleCount;
 	static JFrame frame;
 	static JButton button;
@@ -32,8 +34,9 @@ class UI extends JPanel implements ActionListener {
 	static JTable mem;
 	static JTable reg;
 
-	static int DRAMSize = 16, L2Size = 8, L1Size = 4;
+	static int DRAMSize = 2500, L2Size = 500, L1Size = 250;//# of words included in each memory system, since a word has 4 bytes(32bits): L1=1kB, L2=2kB, DRAM=10kB
 	static int wordsPerLine = 2;
+	static int a = 2;
 
 
 	static int clock; // change type to Clock
@@ -211,6 +214,8 @@ class UI extends JPanel implements ActionListener {
         continueButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (useCache != -1 && usePipeline != -1) chosen = true;
+				if (!associativity.getText().isEmpty()) a = Integer.valueOf(associativity.getText());
+				if (!lineLength.getText().isEmpty()) wordsPerLine = Integer.valueOf(lineLength.getText());
                  
             }
         });
@@ -232,6 +237,10 @@ class UI extends JPanel implements ActionListener {
 		runButton.addActionListener(ui);
 
 		t = new JTextField(16);
+		JLabel associativityLabel = new JLabel("Associativity");
+		associativity = new JTextField(16);
+		JLabel lineLengthLabel = new JLabel("Line Width");
+		lineLength = new JTextField(16);
 
 		cycleCount = new JTextField(16);
 		
@@ -240,6 +249,10 @@ class UI extends JPanel implements ActionListener {
         ui.add(cacheSelect);
         ui.add(pipelineLabel);
         ui.add(pipelineSelect);
+		ui.add(associativityLabel);
+		ui.add(associativity);
+		ui.add(lineLengthLabel);
+		ui.add(lineLength);
         ui.add(continueButton);
 
 		frame.add(ui);
@@ -256,8 +269,8 @@ class UI extends JPanel implements ActionListener {
 
 
 		DRAM = new Memory2(DRAMSize, 10, wordsPerLine, -1, 0, null);
-        L2 = new Memory2(L2Size, 5, wordsPerLine, 2, 2, DRAM);
-        L1 = new Memory2(L1Size, 1, wordsPerLine, 2, 1, L2);
+        L2 = new Memory2(L2Size, 5, wordsPerLine, a, 2, DRAM);
+        L1 = new Memory2(L1Size, 1, wordsPerLine, a, 1, L2);
 
 		ui.setMemory(useCache == 1 ? L1 : DRAM);
 
