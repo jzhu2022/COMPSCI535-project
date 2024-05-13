@@ -1,4 +1,4 @@
-mov r10, #2--dimensions of matrix
+mov r10, #25--dimensions of matrix
 mul r11, r10, r10--size of matrix in memory, end address of first matrix
 mul r12, r11, #2--end address of second matrix
 mov r0, #0--address

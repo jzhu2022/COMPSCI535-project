@@ -64,13 +64,6 @@ class UI extends JPanel implements ActionListener {
 	}
 
 	private void updatePipeline() {
-		/*
-		String[] instructions = {Integer.toBinaryString(readOut[0].instruction), 
-								 Integer.toBinaryString(readOut[1].instruction), 
-								 Integer.toBinaryString(readOut[2].instruction), 
-								 Integer.toBinaryString(readOut[3].instruction), 
-								 Integer.toBinaryString(readOut[4].instruction)}; // placeholder, get values from pipeline
-		*/
 		String str = "";
 		for (int i = 0; i < 5; i++ ) {
 			str += STAGE_NAMES[i] + ": " + Integer.toBinaryString(readOut[i] == null ? 0 : readOut[i].instruction) + "\n";
